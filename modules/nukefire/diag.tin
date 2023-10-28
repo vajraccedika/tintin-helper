@@ -1,0 +1,80 @@
+#class {diagMode} {kill}
+#class {diagMode} {open}
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/diag-description {Conditional print debug}
+#var nukefire/diag-help {
+	Type diag with no args to see list of arguments.\n
+	'diag on' and 'diag off' toggle the debug statements.\n
+	Debug statements only exist if dev has added them.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/diag-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/diag
+	} {
+		fail_module nukefire/diag unknown reason
+	}
+}
+
+#nop -- handle diagnostic modes
+
+#nop -- ---------------------------------------------------------------
+#nop -- Variables
+#nop -- ---------------------------------------------------------------
+
+#nop -- List of different modules that include diagnostic display modes
+
+#list {_diagArgs} {create} {state} {buff} {item} {time} {azone} {bank} {postcombat} {zone} {service} {lock} {purple} {room} {events} {scav} {semicolon} {kills} {kill} {log} {stock} {comms} {group} {reroll} {spell} {all} {array} {tell} {casting} {keys} {login} {info} {max} {path} {map}
+
+#nop -- ---------------------------------------------------------------
+#nop -- diag modes
+#nop -- ---------------------------------------------------------------
+
+#nop -- modes on and off
+
+#alias {diag}
+{
+
+	#list {_diagArgs} {find} {%1} {dargs};
+	#if { $dargs > 0} {
+	
+		#if { "%2" == "on" } { #var _diags[%1] on;#echo {<fca>Diagnostic mode %1 set to on} };
+		#elseif { "%2" == "off" } { #var _diags[%1] off;#echo {<fca>Diagnostic mode %1 set to off} };
+		#else { #echo {<fca>Diagnostic mode '%1' is '$_diags[%1]'} };
+		
+	} {
+	#if { "%1" == "" } {
+		#foreach {$_diagArgs[%*]} {_config} {#echo {<fca>Diagnostic mode $_config is $_diags[$_config]}}
+	} {
+		#echo {<fca>Invalid Diagnostic mode mode '%1'}
+	}
+	}
+}
+
+#alias diag_register {
+    #list {_diagArgs} {find} {%1} {_tmp};
+    #if {$_tmp < 1} {#list {_diagArgs} {sort} {%1};diag %1 off}
+}
+
+#nop -- turn all Diagnostic modes off
+
+#alias {allDiagOff} {#foreach {$_diagArgs[%*]} {_config} {diag $_config off}}
+
+allDiagOff
+
+#alias {diaLog %1 %2}
+{
+	#if {"$_diags[%1]" == "on"} {
+		#echo {<bce>DIAGNOSTIC <<ffa>%1<bce>> %2}
+	}
+}
+
+#class {diagMode} {close}

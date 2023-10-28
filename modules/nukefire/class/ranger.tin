@@ -1,0 +1,11 @@
+#class ranger kill
+#class ranger open
+
+#alias heal {
+	sling 'heal' %1
+}
+
+#var skill[opener] ambush
+#var skill[combat] grapple
+
+#class ranger close

@@ -1,0 +1,99 @@
+#class exp kill
+#class exp open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var exp-description {Tracks and updates exp in Nukefire}
+#var exp-help {
+	Tracks and updates exp, updates odometers.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/exp-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/exp
+	} {
+		fail_module nukefire/exp unknown reason
+	}
+}
+
+#nop event_register expGain exp_gain {exp_gain %2}
+#nop event_register expGain exp_counter {exp_counter}
+
+event_register prompt update_tnl {update_tnl %6}
+event_register {variable MSDP_EXPERIENCE} expCounter {exp_counter}
+event_register {variable MSDP_EXPERIENCE} initExp {init_exp}
+
+#event {VARIABLE UPDATED exp_mins} {
+	event_raise expMins
+}
+
+#variable {exp_min} {0}
+#variable {exp_hour} {0}
+#variable {mins_to_level} {0}
+#format exp_start_time {%T}
+
+#alias init_exp {
+	#nop %0;
+	init exp[start] $MSDP_EXPERIENCE
+}
+
+#tab reloadExp
+#alias {reloadExp} {
+  #class exp kill;
+  #read $lib/exp.tin;
+}
+
+#alias update_tnl {
+	#nop %0;
+	#var {_tnl_raw} {%1};
+	#if {&{_tnl_raw}} {
+		#replace _tnl_raw {)} {};
+		#replace _tnl_raw {(} {};
+		#var MSDP_EXPERIENCE_TNL $_tnl_raw
+	}
+}
+
+#alias {exp_counter} {
+	diaLog lock Exp counter called;
+	#nop %0;
+	#math exp[gain] {$MSDP_EXPERIENCE - $exp[start]};
+	#format exp_now_time {%T};
+	#math exp_elapsed_time $exp_now_time - $exp_start_time;
+	#math exp_per_sec $exp[gain] / $exp_elapsed_time;
+	#math exp_min $exp_per_sec * 60;
+	#math exp_hour $exp_min_60;
+	#math expgoal_pct ($MSDP_EXPERIENCE / ($MSDP_EXPERIENCE_TNL * 100));
+	#math mins_to_level $MSDP_EXPERIENCE_TNL / $exp_mins
+}
+
+#action {^[ Remorts:%s%d ] [ Deaths:%s%d ] [ Experience:%s%d ]} {
+	#var remorts %2;
+	#var deaths %4;
+	#var exp[total] %6;
+	#if {$exp[start] < 0} {
+		#var exp[start] $exp[total]
+	}
+}
+
+#nop {
+#nop #action {^You need %d exp to reach your next level.} {
+	#var exp[tnl] %1
+};
+
+#nop #action {^You receive %1 experience points.$} {
+	event_raise expGain %1
+};
+
+#nop #alias exp_gain {
+	#nop %0;
+	#math exp[total] $exp[total] + %1;
+	#math exp[tnl] $exp[tnl] - %1
+}
+}
+#class exp close

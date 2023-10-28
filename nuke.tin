@@ -36,13 +36,13 @@ load_module help
 load_module counter
 
 
-#nop -- This module will control kallisti accounts
-load_module kallisti
+#nop -- This module will control nukefire characters
+load_module nukefire
 
 #nop -- end module loading
 
 #nop -- load additional configuration
-#if {&local_config} {
+#if {&{local_config}} {
 	#read $ttd/${local_config}
 }
 #nop vim: syntax=tt

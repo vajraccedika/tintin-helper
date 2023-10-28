@@ -1,0 +1,127 @@
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nuke_comms-description {Nukefire communications logging support}
+#var nuke_comms-help {coming soon}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nuke_comms-register {
+	#if {@isloaded{events}} {
+		register_module nuke_comms
+	} {
+		#showme ERROR: events not loaded;
+		fail_module nuke_comms
+	}
+}
+
+#alias nuke_comms-unregister {
+	#zap ${comms-session}
+}
+
+#nop --
+#nop Initialize some port stuff
+#nop --
+init comms-session comms;
+
+#info sessions save;
+#if {!&info[SESSIONS][${comms-session}]} {
+	#line quiet #port {init} {${comms-session}} {0};
+	#untick {idle};
+	#ses -;
+}
+
+#${comms-session} #macro {OP} {#ses nukefire:${char_name}};
+#${comms-session} #event {SESSION ACTIVATED} {#buffer end};
+#gts event_register {SESSION DISCONNECTED nukefire:${char_name}} {nuke_comms} {#zap ${comms-session}}
+
+#macro {OQ} {#ses ${comms-session}};
+
+#alias nuke_comms-unregister {
+	event_remove_handler nuke_comms;
+}
+
+#var chat[rows] 10;
+
+
+#alias {update_chat} {
+	#var _msg %2;
+	#replace {_msg} {{} {\{};
+	#replace {_msg} {}} {\}};
+
+	#if {&chat[log][] >= $chat[rows]} {
+		#list chat[log] del 1
+	};
+	#list chat[log] ins -1 {$_msg};
+	#if {@isloaded{layout}} {
+		layout_comms_update
+	};
+	send_to_comms_session $_msg
+}
+
+#alias {send_to_comms_session} {
+	#info sessions save;
+	#if {&info[SESSIONS][${comms-session}]} {
+		#${comms-session} #showme %0
+	}
+}
+
+#nop -- ---------------------------------------------------------------
+#nop -- Group communications
+#nop -- ---------------------------------------------------------------
+
+#action {^You say, '%1'$} {
+	event_raise {commsSay} {You} {%1} {%0};
+} {8}
+
+#action {^%w {says|grunts}, '%1'$} {
+	event_raise {commsSay} {%1} {%3} {%0};
+} {8}
+
+#action {^%1 gossips, '{.*}'$} {
+	event_raise commsGos {%1} {%2} {%0}
+} {8}
+#nop {\e[0m\e[38;5;198mYou\e[0;00m \e[38;5;019mgossip,\e[0;00m \e[38;5;198m'huehue'\e[0;00m}
+#action {^You gossip, '{.*}'$} {
+	event_raise commsGos {me} {%1} {%0}
+} {8}
+
+#action {^%1 hollers, {.*}} {
+	event_raise commsHoller {%1} {%2} {%0}
+} {8}
+
+#action {^[Group] %1 says, '{.*}'$} {
+	event_raise commsGroup {%1} {%2} {%0}
+} {8}
+
+#action {^You group-say, '{.*}'$} {
+    event_raise commsGroup {me} {%1} {%0}
+} {8}
+
+#action {^%1 telepaths to you, '{.*}'} {
+	event_raise {commsTell} {%1} {%2} {%0}
+} {8}
+#nop {\e[0;35mYou \e[0;35mtelepath\e[0;35m Juki, 'huehue'\e[0m}
+#action {^You telepath %1, '{.*}'} {
+	event_raise {commsTell} {me -> %1} {%2} {%0}
+} {8}
+
+#nop -- ---------------------------------------------------------------
+#nop -- Events
+#nop -- ---------------------------------------------------------------
+event_register {commsGroup} {nuke_comms} {update_chat group {%4}};
+event_register {commsClan}  {nuke_comms} {update_chat clan {%4}};
+event_register {commsGos}   {nuke_comms} {update_chat gos {%4}};
+event_register {commsGemote}{nuke_comms} {update_chat gemote {%4}};
+event_register {commsTell}  {nuke_comms} {update_chat tell {%4}};
+event_register {commsWorld} {nuke_comms} {update_chat world {%3}};
+event_register {commsDev}   {nuke_comms} {update_chat dev {%4}};
+event_register {commsChat}  {nuke_comms} {update_chat chat {%3}};
+event_register {commsSay}   {nuke_comms} {update_chat say {%4}};
+event_register {commsHero}  {nuke_comms} {update_chat hero {%4}};
+event_register {commsAdvice}{nuke_comms} {update_chat advice {%4}};
+
+#nop -- vim: syntax=tt

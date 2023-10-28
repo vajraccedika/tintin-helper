@@ -1,0 +1,23 @@
+#class combat kill
+#class combat open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/combat-description {Combat management for Nukefire}
+#var nukefire/combat-help {TBA}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/combat-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/combat
+	} {
+		fail_module nukefire/combat unknown reason
+	}
+}
+
+#class combat close

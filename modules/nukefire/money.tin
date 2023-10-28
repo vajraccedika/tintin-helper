@@ -1,0 +1,112 @@
+#class money kill
+#class money open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/money-description {Money handling for Nukefire.}
+#var nukefire/money-help {
+	Keep track of credits on hand, in bank, and total.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/money-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/money
+	} {
+		fail_module nukefire/exp unknown reason
+	}
+}
+
+#event {VARIABLE UPDATED credits[cash]} {
+	event_raise updateMoney
+}
+
+#event {VARIABLE UPDATED credits[balance]} {
+	event_raise updateMoney
+}
+
+#event {VARIABLE UPDATED credits[total]} {
+	event_raise updateTotalMoney
+}
+
+event_register creditsChange calc_creds {credits_change_calc %2 %3}
+event_register updateMoney calc_total_creds {calc_total_creds}
+
+#action {^[ Con:%s%d ] [ Kills:%s%d ] [ Credits:        \$%s%d ]} {
+	#var con %2;
+	#var kills %4;
+	#var credits[cash] %6;
+}
+
+#action {^Your current balance is %d credits.$} {
+	#var credits[balance] %1
+}
+
+#action {^There {were|was} %d {credits|credit}.$} {
+	event_raise creditsChange gain %2
+}
+
+#action {^You withdraw %d credits.$} {
+	event_raise creditsChange withdraw %1
+}
+
+#action {^You deposit %d credits.$} {
+	event_raise creditsChange deposit %1;
+}
+
+#alias credits_change_calc {
+	#nop %0;
+	#switch {"%1"} {
+		#case {"gain"} {
+			#math credits[cash] $credits[cash] + %2
+		};
+		#case {"loss"} {
+			#math credits[cash] $credits[cash] - %2
+		};
+		#case {"deposit"} {
+			#math credits[cash] $credits[cash] - %2;
+			#math credits[balance] $credits[balance] + %2
+		};
+		#case {"withdraw"} {
+			#math credits[cash] $credits[cash] + %2;
+			#math credits[balance] $credits[balance] - %2
+		};
+		#default {
+			info tools Unknown credits change calc: `%1`.
+		}
+	}
+	
+}
+
+#alias {droc %1} {
+	drop %1 credits;
+	event_raise creditsChange loss %1
+}
+
+#alias depall {
+	deposit $credits[cash]
+}
+
+#alias calc_total_creds {
+	#nop %0;
+	#math credits[total] $credits[cash] + $credits[balance]
+}
+
+#nop {( 4) A few credits is lying here.
+( 3) Several credits is lying here.
+( 3) A small packet of credits is lying here.
+( 8) A large packet of credits is lying here.
+(11) A pile of credits is lying here.
+( 6) A large pile of credits is lying here.
+( 2) A large heap of credits is lying here.
+( 2) A huge mound of credits is lying here.}
+
+#var credits_args {{few|}}
+#var credits_args {{A Mountain|A small mountain|A huge mountain|An enormous mound|}}
+
+#class money close

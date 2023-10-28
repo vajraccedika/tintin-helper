@@ -1,0 +1,276 @@
+#class nuke-func kill
+#class nuke-func open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/nuke_func-description {Functions used in other Nukefire modules.}
+#var nukefire/nuke_func-help {TBA}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/nuke-func-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/nuke_func
+	} {
+		fail_module nukefire/nuke_func unknown reason
+	}
+}
+
+#function max {
+	#if {%1 > %2} {
+			#return %1
+	} {#return %2} 
+}
+
+#function hash {
+	#format _hash {%H} {%1};
+	#return $_hash
+}
+
+#function min {
+	#if {%1<%2} {
+			#return %2
+	} {#return %1}
+}
+
+#function mpoch {
+	#format mpoch_time {%U};
+	#math mpoch_time { $mpoch_time / 1000 };
+	#return $mpoch_time
+}
+
+#function {pct} {
+	#math _fcn_pct { %1 * 100.0 / %2 };
+    #return $_fcn_pct
+}
+
+#function epoch {
+    #format epoch_time {%T};
+    #return $epoch_time
+}
+
+#function {listSize} {
+	#list {%1} {size} {size};
+    #return $size
+}
+
+#function ansiStrip {
+	#line strip #var {_ansi_strip} {%0};
+	#return $_ansi_strip
+}
+
+#var articles {the |^a |The |the |of |A |^an }
+#var item_flags {\(anti-good\)|\(glows\)|\(hums\)|\(good\)|\(invis\)|\(anti-evil\)|\(dark\)|\[socketed\]|\(magic\)|\(insured\)}
+
+#function getKeyword {
+	#line sub var #line strip #var _raw_item %1;
+	#replace _raw_item {{$crafted}} {};
+	#replace _raw_item {{$light}} {};
+	#replace _raw_item {{$item_flags}} {};
+	#replace _raw_item {$ports} {};
+	#replace _raw_item {'s} {};
+	#replace _raw_item {'} { };
+	#replace _raw_item {-} { };
+	#replace _raw_item {{$articles}} {};
+	#format _raw_item {%p} {$_raw_item};
+	#list _item_keys create $_raw_item;
+	#return $_item_keys[-1]
+}
+
+#function {cleanItem} {
+	#var {tempItem} {%1};
+	#replace {tempItem} {{$item_flags}} {};
+	#format {tempItem} {%p} {$tempItem};
+	#return @ansiStrip{$tempItem}
+}
+
+#nop -- takes <arg>, minval, maxval
+#function {clamp} {
+	#if {%1 < %2} {#return %2 };
+	#if {%1 > %3} {#return %3 } {#return %1}
+}
+
+#function getPctColorValue {
+	#math _val {%2 + ( ( %1 -%2 ) * %3 )};
+	#format {v_res} {%X} {$_val};
+	#if {$_val < 16 } { #return 0$v_res} {#return $v_res}                                             
+}
+
+#alias testrange {
+	#var r_start %1;
+	#var g_start %2;
+	#var b_start %3;
+	#var r_end %4;
+	#var g_end %5;
+	#var b_end %6;
+	#foreach {0;.10;.20;.30;.40;.50;.60;.70;.80;.90;1} {pct} {
+			#showme {<B@getPctColorValue{$r_start;$r_end;$args[perc]}@getPctColorValue{$g_start;$g_end;$pct}@getPctColorValue{$b_start;$b_end;$pct}>   }
+	}
+}
+
+#var rgb[mana] {123 98 201 219 19 19}
+#var rgb[health] {255 255 255 255 0 0}
+#var rgb[stam] {230 227 38 225 48 48}
+
+#nop -- keep args[color] for the actualdisplay color for consistency
+#function display_progress {
+	#var args[perc] {%1};
+	#var args[display] {%2};
+	#var args[length] {%3};
+	#var args[rgb] {%4};
+
+	#format args[display] {%.${args[length]}s} {$args[display]};
+
+	#if {"$args[rgb]"==""} {
+			#var args[rgb] {15 56 156 33 227 227}
+	};
+	#else {
+			#var args[rgb] $rgb[$args[rgb]]
+	};
+	#list args[rgb] create $args[rgb];
+	#var r_beg $args[rgb][1];
+	#var g_beg $args[rgb][2];
+	#var b_beg $args[rgb][3];
+	#var r_end $args[rgb][4];
+	#var g_end $args[rgb][5];
+	#var b_end $args[rgb][6];
+	#unvar args[rgb];
+	
+	#var args[color] {<B@getPctColorValue{$r_beg;$r_end;$args[perc]}@getPctColorValue{$g_beg;$g_end;$args[perc]}@getPctColorValue{$b_beg;$b_end;$args[perc]}><aaa>};
+	
+	#FORMAT display_text_len {%L} {$args[display]};
+	#MATH display_text_pre {(($args[length] + 1) - $display_text_len) / 2 + $display_text_len};
+	#FORMAT args[display] {%+${display_text_pre}s} {$args[display]};
+	#FORMAT args[display] {%-$args[length]s} {$args[display]};
+	#UNVAR display_text_pre;
+	#UNVAR display_text_len;
+
+	#var i 0;
+	#var display {};
+	#PARSE {$args[display]} {display_text_char}
+	{
+			#IF {$i < $args[perc]}
+			{
+					#FORMAT display {%s%c%s} {$display} {$args[color]} {$display_text_char};
+			}
+			{
+					#FORMAT display {%s%c<478>%s} {$display} {<G04>} {$display_text_char};
+			};
+
+			#MATH i {$i + (1.000/$args[length])};
+	};
+	#FORMAT display {<488>%s%c} {$display} {<099>};
+	#UNVAR display_text_char;
+
+	#RETURN $display;
+}
+
+#function {is} {
+	#list {%2} {find} {%1} {_l_index};
+	#return $_l_index
+}
+
+#function abs {
+	#if { %1 < 0 } {
+			#math {_abs} { %1 * -1 } 
+			};
+	#else {
+	#var {_abs} %1
+	};
+	#return {$_abs}
+}
+
+#function hNum {
+	#var _s {@abs{%1}};
+	#if {$_s >=1000000000} {
+			#math hNum { %1 / 1000000000.00 };
+			#return ${hNum}b
+	};
+	#elseif {$_s >=1000000} {
+			#math hNum { %1 / 1000000.00 };
+			#return ${hNum}m
+	};
+	#elseif {$_s >=1000} {
+			#math hNum { %1 / 1000.0 };
+			#return ${hNum}k
+	};
+	#elseif {$_s < -1000} {
+		#math hNum { %1 /1000.0};
+		#return ${hNum}k
+	};
+	#elseif {$_s <= -1000000} {
+		#math hNum { %1 / 1000000.00 };
+		#return${hNum}m
+	};
+	#elseif {%1 < 0} {
+			#return %1
+	};
+	#else {
+		#return $_s
+	}
+}
+
+#function cleanTerrain {
+	#format {_tmp} {%p} {%1};
+#line sub var #line strip #var clean_ter {$_tmp};
+	#return $clean_ter
+}
+
+#function isD {
+	#regexp {%1} {^{\d+\.?\d*}$} {#var _dig 1} {#var _dig 0};
+	#return $_dig    
+}
+
+#function term_width {
+	#screen get cols _scr_wid;
+	#return $_scr_wid
+}
+
+#nop -- takes init arg1 {arg2}
+#alias {init %1 %2} {
+	#if {!&{%1}} {
+			#var %1 {%2}
+	}
+} {7}
+
+#alias {init %1 %2 %3} {
+	#if {!&{%1}} {
+			#class %2 assign {#var %1 {%3}}
+	}
+} {5}
+
+#function is_session {
+	#info sessions save;
+	#foreach *info[SESSIONS][] _ses {
+			#if {"$_ses" == "%1"} {#return 1}
+	};
+	#return 0
+}
+
+#function len {
+	#format _len {%L} {%1};
+	#return $_len
+}
+
+#function hmvDelta {
+	#if {%1 < 0} {
+		#return {<110> %1<070>}
+	} {
+		#return {<120> +%1<070>}
+	}
+}
+
+#function hmvChange {
+	#if {%1 < 0} {
+		#return {<B373b41><Fff3300><188>%1<Ffff>}
+	} {
+		#return {<B373b41><F33cc33><188>+%1<Ffff>}
+	}
+}
+
+
+#class functions close

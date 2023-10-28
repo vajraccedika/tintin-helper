@@ -1,0 +1,140 @@
+#class map kill
+#class map open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/map-description {Nukefire location manager.}
+#var nukefire/map-help {
+	Nukefire doesn't support MSDP_ROOM_VNUMS or MSDP_ROOM_EXITS\n
+	so at this time the map module is limited to attempting to\n
+	know your location and provide information to the HUD.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/map-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/map
+	} {
+		fail_module nukefire/map unknown reason
+	}
+}
+
+#nop event_register mapEnterRoom test {#nop %0;debug %1:%2:%3}
+#nop event_register roomLook 3_room_cap {do_room_cap}
+event_register roomLook room_info {get_room_info {%2} {%3} {%4}}
+#nop event_register roomLook 9_room_entry {check_room_entry}
+event_register prompt end_room_look {end_room_look}
+event_register prompt end_exits {end_exits}
+event_register updateExits clear_exits {clear_exits}
+event_register endRoomLook do_room_clear {do_room_clear}
+event_register endRoomLook do_room_hash {do_room_hash}
+event_register recall clear_exits {clear_exits}
+#nop event_register updateExits 9clear_exits {clear_exits}
+
+#action {~\e[0;36m%1 - \e[0;36m[%2] [%3]\e[0m\e[0m} {
+	event_raise roomLook {%1} {%2} {%3};
+	diaLog map Looking at room
+}
+
+#action {Obvious exits:$} {
+	diaLog map update exits;
+	event_raise updateExits;
+	#nop #unvar exits;
+	#var update_exits 1
+}
+
+#action {{North|East|South|West|Up|Down}%s- %2} {
+	#if {$update_exits==1} {
+		#var room[exits][%1] %2;
+		diaLog map setting exit %1 to %2;
+	}
+} {4}
+
+#alias get_room_info {
+	#nop %0;
+	diaLog kill room_info called;
+	#var room[name] %1;
+	#var room[time] %2;
+	#var room[sector] %3;
+	#var room[looking] 1;
+	#var room[desc] {};
+}
+
+#alias end_exits {
+	#nop %0;
+	#if {$update_exits == 1} {
+		#var update_exits 0;
+		#nop #var room[exits] $exits;
+		event_raise drawExits
+	}
+}
+
+#alias clear_exits {
+	#nop %0;
+	#unvar room[exits];
+	diaLog map clearing exits;
+}
+
+#alias end_room_look {
+	#nop %0;
+	#if {$room[looking]==1} {
+		event_raise endRoomLook
+	}
+}
+
+#alias do_room_clear {
+	#nop %0;
+	#var room[looking] 0
+}
+
+#alias do_room_hash {
+	#nop %0;
+	#nop #if &{exits} {
+		#var room[exits] $exits
+	};
+	#unvar room[time];
+	#format new_room_hash {%H} $room;
+	#if {$new_room_hash == $old_room_hash} {
+		diaLog map Looking at same room
+	};
+	#else {
+		diaLog map looking at new room;
+		#var old_room_hash $new_room_hash;
+	}
+}
+
+#action {{.*}} {
+	#if {$room[looking]==1} {
+		diaLog kill roomcap:"%0";
+		#format room[desc] {%s%s}
+		{$room[desc]}
+		{%0}
+	}
+} {9}
+
+#action {^With a chant lost to the eons, you transcend space and time, fading into the void!$} {
+	event_raise recall
+} {4}
+
+#action {^Whispers of forgotten aeons echo, 'We return you return to your celestial sanctuary.'} {
+	#nop
+} {4}
+
+#nop --
+#nop highlights
+#nop --
+#nop note: #line gag and showme too slow on local
+
+#high {^North -%1$} {Orange}
+#high {^East  -%1$} {Magenta}
+#high {^South -%1$} {Violet}
+#high {^West  -%1$} {Cyan}
+#high {^Up    -%1$} {Tan}
+#high {^Down  -%1$} {Yellow}
+
+#class map close

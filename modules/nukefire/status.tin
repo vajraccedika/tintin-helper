@@ -1,0 +1,115 @@
+#class status kill
+#class status open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/status-description {Tracks HMV}
+#var nukefire/status-help {
+	Tracks HMV using scraping and MSDP.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/status-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/status
+	} {
+		fail_module nukefire/status unknown reason
+	}
+}
+
+
+#nop {
+	[||||||||||||||||||||||||||||||||||||||||||||||||||] - hit    1167/1167
+[||||||||||||||||||||||||||||||||||||||||||||||||||] - mana   722/722
+[||||||||||||||||||||||||||||||||||||||||||||||||||] - move   666/666
+}
+
+#action {^[%1] - %2 %s %d/%d$} {
+	#var hmv[current][%2] %4;
+	#var hmv[max][%2] %5
+}
+
+#action {^[ Level: $s%d ] [ Class: %s%w ] [ Age: %s%3 ]$} {
+	#var level %2;
+	#var class %4
+}
+
+#action {^Name: %w %2} {
+	#var name %1
+} {4}
+
+event_register prompt 5update_hmv {update_hmv %3 %4 %5}
+event_register prompt 9hmv_change_check {hmv_change_check %2 %3}
+
+event_register {variable MSDP_HEALTH} hmvchange hmvchange
+event_register {variable MSDP_MOVEMENT} hmvchange hmvchange
+event_register {variable MSDP_MANA} hmvchange hmvchange
+
+#alias hmvchange {
+	#nop %0;
+	#nop new val: %2, old val %3;
+}
+#nop event_register {variable MSDP_HEALTH} 
+
+#alias update_hmv {
+	#nop %0;
+	#var prompt_h @ansiStrip{%1};
+	#var prompt_m @ansiStrip{%2};
+	#var prompt_v @ansiStrip{%3};
+	#replace prompt_h {H} {};
+	#replace prompt_m {M} {};
+	#replace prompt_v {V} {};
+	#var hmv[current][hit] $prompt_h;
+	#var MSDP_HEALTH $prompt_h;
+	#var MSDP_MANA $prompt_m;
+	#var MSDP_MOVEMENT $prompt_v;
+	#var hmv[current][mana] $prompt_m;
+	#var hmv[current][move] $prompt_v
+}
+#function returnHMV {
+	#var _h @ansiStrip{%1};
+	#var _m @ansiStrip{%2};
+	#var _v @ansiStrip{%3};
+	#replace _h {H} {};
+	#replace _m {M} {};
+	#replace _v {V} {};
+	#return {h;m;v}
+}
+
+#alias hmv_change_check {
+	#nop %0;
+	diaLog info hmv_change_check called;
+	#var hmv_delta_line {};
+	diaLog info $hmv[old];
+	#foreach {hit;mana;move} {_hmv} {
+		#var hmv_change[$_hmv] 0;
+		#var hmv_delta[$_hmv] {};
+		#if {$hmv[current][$_hmv] != $hmv[old][$_hmv]} {
+			diaLog info HMV[$_hmv] old not HMV current;
+			#math hmv_change[$_hmv] $hmv[current][$_hmv] - $hmv[old][$_hmv];
+			#if {$hmv_change[$_hmv] != 0} {
+				diaLog info Change of $hmv_change[$_hmv] for $_hmv;
+				diaLog info {Value of hmv_line is "$hmv_delta_line"};
+				#format hmv_delta_line {%s%s:%s }
+				{$hmv_delta_line}
+				{$_hmv}
+				{@hmvDelta{$hmv_change[$_hmv]}};
+				#var hmv_change[last][$_hmv] @hmvChange{$hmv_change[$_hmv]}
+			}
+		};
+		#var hmv[old][$_hmv] $hmv[current][$_hmv]
+	};
+	#if {@len{$hmv_delta_line} > 0} {
+		diaLog info showing hmv delt;
+		#format {hmv_delta_line} {<070>< %s>}
+		{$hmv_delta_line};
+		#echo $hmv_delta_line;
+	};
+}
+
+#class status close

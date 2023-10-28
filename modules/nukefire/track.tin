@@ -1,0 +1,37 @@
+#class track kill
+#class track open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/track-description {description}
+#var nukefire/track-help {help file}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/track-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/track
+	} {
+		fail_module nukefire/track unknown reason
+	}
+}
+
+#alias tr {
+	#var track_target %1
+}
+
+#alias tt {
+	track $track_target
+}
+
+#action {^You sense a trail %1 from here!$} {
+	#if {"$auto[track]"=="on"} {
+		#send %1
+	}
+}
+
+#class track close

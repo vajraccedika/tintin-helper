@@ -1,0 +1,197 @@
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire-description {Login and session management for Nukefire}
+#var nukefire-help {Use connect to connect to Nukefire on the main port.}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire-register {
+	#if {@isloaded{events}} {
+		register_module nukefire
+	} {
+		fail_module nukefire
+	}
+}
+
+#tab connect
+#alias connect {
+	#showme attempt to create session for player %1.;
+	#session nukefire:%1 {tdome.nukefire.net} {4000} {$players/%1_nukefire.player};
+	#if {@is_session{nukefire:%1}} {
+		#if {"%1" != "${char_name}"} {
+			warn CONFIG '%1' does not match '${char_name}' in $players/%1_nukefire.player;
+			#format {_ts} {%t} {%D %H:%m:%S};
+		    #line log $log/tth.error ${_ts} warn CONFIG '%1' does not match char_name field '${char_name}' in $players/%1_nukefire.player;
+		}
+	} {
+		err connect Connection failed.
+	}
+}
+
+#tab connect
+#alias connect {
+	#showme attempt to create session for player %1.;
+	#session nukefire:%1 {tdome.nukefire.net} {4000} {$players/%1_nukefire.player};
+	#var menu_option login;
+	
+	#if {@is_session{nukefire:%1}} {
+		#if {"%1" != "${char_name}"} {
+		    warn CONFIG '%1' does not match '${char_name}' in $players/%1_nukefire.player;
+    	    #format {_ts} {%t} {%D %H:%m:%S};
+		    #line log $log/tth.error ${_ts} warn CONFIG '%1' does not match char_name field '${char_name}' in $players/%1_nukefire.player;
+
+    	};
+	} {
+		err connect Connection failed.
+	}
+}
+
+#alias post_connect_load {
+    #showme %0;
+	info Loading post-connect modules;
+	load_module prefs;
+	load_module layout;
+	load_module nuke_comms;
+	load_module nukefire/map;
+	load_module queues;
+	#foreach {$modules_on_connect[%*]} {module} {
+			load_module $module
+	};
+
+	info nukefire Loading nukefire modules;
+	#foreach {position;money;combat;diag exp;nuke_func;inventory;mobs;track;status;map} tmp {
+		load_module nukefire/$tmp
+	};
+	#line oneshot #tick {clear} {#buffer end} {0.5};
+	#if {@is_alias{player_setup}} {player_setup %1};
+}
+
+#action {^            What's your name, freejack?} {
+	#send ${char_name};
+	#nop #class player read {$players/${char_name}_nukefire.player}
+}
+
+#action {^Name:} {
+	#if {"$menu_option" == "login"} {
+		#send ${char_name};
+		#nop #class player read {$players/${char_name}_nukefire.player}
+	}
+} {9}
+
+#action {^Password:} {
+	#send ${char_password};
+	#if {"${account_dont_forget_password}" != "true"} {
+		#showme <fcc>Forgetting password.;
+		#unvar account_password;
+	};
+}
+
+#action {^*** PRESS RETURN:} {#cr}
+
+#action {~^  \t\t\t Make your choice:} {
+	#if {"$menu_option" == "login"} {
+		#send 1;
+		#var menu_option logout
+	}
+}
+
+#action {^Reconnecting.} {
+	#var menu_option logout;
+	post_connect_load reconnect
+}
+
+#action {^You take over your own body, already in use!$} {
+	#var menu_option logout;
+	post_connect_load reconnect
+}
+
+#action {^Kick Back.   Relax.   Dream.   Build.$} {post_connect_load login}
+
+#nop -- remove, we don't have either of these
+#nop -- Let's populate two tiles as samples as they're commonly asked for;
+event_register {variable MSDP_AREA_NAME} {right} {generate_area_info {%0} {%1} {%2}};
+event_register {variable MSDP_GROUP} {right} {generate_group_info {%0} {%1} {%2}};
+
+#nop -- remove, we don't have msdp group
+#alias generate_group_info {
+    syslog right debug generate new group info - %2;
+    #if {(!&{MSDP_GROUP}) || (&MSDP_GROUP[] == 0)} {
+		#list group_info create {<Ffff>Not Grouped};
+    } {
+    	#list group_info create {<Ffff>Group (level ${MSDP_GROUPLEVEL})};
+	};
+    #foreach *MSDP_GROUP[%*] {_idx} {
+		#var _flags $MSDP_GROUP[$_idx][flags];
+		#replace {_flags} {[ranged]} {>};
+		#local _lev $MSDP_GROUP[$_idx][level];
+		#if {$_lev > 99} {
+			#math {_lev} {$_lev - 100};
+			#var _lev *${_lev};
+		};
+
+        #format _line {<ffff>%-5s%+2s] %-10.9s %-3s %-3s %-3s <ffff>%-4s}
+            {@withMe{$_idx}[$MSDP_GROUP[$_idx][class]}
+			{$_lev}
+            {$MSDP_GROUP[$_idx][name]}
+            {@colorPct{$MSDP_GROUP[$_idx][health]}}
+            {@colorPct{$MSDP_GROUP[$_idx][mana]}}
+            {@colorPct{$MSDP_GROUP[$_idx][stamina]}}
+            {$_flags};
+             #list group_info add {{$_line}};
+    };
+    #if {@is_alias{display_right_tiles}} {display_right_tiles}
+}
+#nop -- remove, we don't have this information
+#nop -- we'll have to screen scrape for location info
+#alias generate_area_info {
+    syslog right debug generate new area info - %1|%2|%3;
+    #var area_info {${MSDP_AREA_NAME}\nLevel: $MSDP_AREA_MINLEVEL - $MSDP_AREA_MAXLEVEL};
+    #if {@is_alias{display_right_tiles}} {display_right_tiles}
+}
+
+#nop -- generate_area_info;
+#nop -- generate_group_info;
+
+#tick {idle} {#cr} {135}
+
+#nop -- kill triggers here
+#action {^%1's pitiful death cry assaults your ears!$} {
+	#buffer get _expline -1;
+	#var _dead_mob %1;
+	#regexp {$_expline} {You receive %d experience points.} {
+		event_raise {mob kill} {$_dead_mob} {&1}
+	} {
+		event_raise {mob_kill} {$_dead_mob} {0}
+	}
+}
+
+#action {^You hear %1's last scream for mercy!$} {
+	#buffer get _expline -1;
+	#var _dead_mob %1;
+	#regexp {$_expline} {You receive %d experience points.} {
+		event_raise {mob kill} {$_dead_mob} {&1}
+	} {
+		event_raise {mob_kill} {$_dead_mob} {0}
+	}
+}
+
+#nop -- we will use tt event prompt for this
+#event {RECEIVED PROMPT} {
+	event_raise prompt %0
+}
+
+#event {SEND OUTPUT} {
+	#if {"$auto[send]"=="on"} {
+		#echo {<cfa>%0}
+	}
+}
+
+#var auto[send] on
+
+#action {^{[a-zA-Z ]+} has arrived} {event_raise {entity arrival} {%1}}
+
+#nop vim: syntax=tt

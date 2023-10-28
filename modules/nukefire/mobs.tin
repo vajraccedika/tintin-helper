@@ -1,0 +1,280 @@
+#class mobs kill
+#class mobs open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/mobs-description {Manage mobs and mob database for Nukefire.}
+#var nukefire/mobs-help {TBA}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/mobs-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/mobs
+	} {
+		fail_module nukefire/mobs unknown reason
+	}
+}
+
+#nop {
+	\e[0;33mLarry Bird rubs his sore back.
+	\e[0m\e[0;33mLeslie Visser sticks a microphone in your face.
+	\e[0m\e[0;33mThe referee blows his little whistle at you.
+	\e[0m\e[0;33mShaq looks down at you and snickers.
+	\e[0m\e[0;33mPatrick Ewing howls and beats his chest.
+}
+
+#nop {
+	\e[0;36mThe Temple Ruins - \e[0;36m[pre-dawn] [Inside]\e[0m\e[0m
+	You stand inside a massive temple, the once pristine walls now cracked and
+	crumbling, the arches and pillars showing signs of decay.  The ceiling, once a
+	marvel of technology, flickers with a dim, ominous light.  The air is thick with
+	dust and the scent of rusted metal.  The only sounds are the distant hums and
+	whirs of ancient machines, struggling to maintain function after years of
+	neglect.  Side passages lead north, south, and west, each one shrouded in
+	darkness.  Outside the corroded doorway to the east, you catch a glimpse of
+	Technology Square, now a barren wasteland.  A stairway descends downwards,
+	leading to the Medical Center.  Before you stands a towering statue, its
+	metallic surface weathered and pitted, a testament to the ravages of time.
+
+	\e[0;34mA glowing aura fills the room.\e[0m
+
+	\e[0;32m\e[0;32mA large, gray storage locker stands bolted to the wall.
+	\e[0m\e[0;32m\e[0;32mA large public display terminal is mounted on a wall here.
+	\e[0m\e[0;32m\e[0;32mAn official looking sign is posted here
+	\e[0m\e[0;33mA whirling blur is here.\e[0m
+	\e[0;33m(\e[1;31mgroup\e[0;33m) Jegs is standing here.
+	\e[0m\e[0;33m(\e[1;31mleader\e[0;33m) Jags is standing here.
+	\e[0m\e[0;33m(\e[1;31mgroup\e[0;33m) Scoop is standing here.
+	\e[0m\e[0;33m(\e[1;31mgroup\e[0;33m) Hamster is standing here.
+	\e[0m\e[0;33m(\e[1;31mgroup\e[0;33m) Bacon is standing here.
+	\e[0m\e[0;33m(\e[1;31mleader\e[0;33m) Biscuit is standing here.
+	\e[0m\e[0;33mMo is standing here.
+	\e[0m
+}
+
+event_register mobLine add_mob {add_mob {%2}}
+event_register roomLook clear_mobs {clear_mobs}
+
+#action {~^\e[0;33m%1$} {
+	event_raise mobLine {%1}
+} {4}
+
+#action  {~\e[0m\e[0;33m%1$} {
+	event_raise mobLine {%1}
+} {4}
+
+#alias add_mob {
+	#nop %0;
+	diaLog zone add_mob received input:%1:;
+	#var _mob @ansiStrip{%1};
+	#replace _mob {(Eldritch Aura)} {};
+	diaLog zone pre-stripped mob is "$_mob";
+	#format {mob} {%p} {$_mob}; 
+	diaLog zone post-stripped mob is "$mob";
+	#if {$room[looking]==1} {
+		diaLog zone room[looking] is true;
+		#list mobs_in_room[@mobsPRFromLong{%1}] add {$mob}
+	}
+}
+
+#alias clear_mobs {
+	#nop %0;
+	#list mobs_in_room clear
+}
+
+#alias read_mobs {
+	#nop %0;
+	#var mobs_data 1;
+	#var mobsdb {${char_name}_mobs};
+	#class mobsdb kill;
+	#class {mobsdb} {open};
+	#var mobsKWHash null;
+	#var mobsPRHash null;
+	#nop -- included for debug info mobs mobsKWHash: $mobsKWHash;
+	#nop -- info mobs mobsPRHash: $mobsPRHash;
+	#read $lib/${mobsdb}.db;
+	#if {$mobs_data==1} {info mobs Reading mobs database for '$mobsdb'.};
+	#class {mobsdb} {close};
+}
+
+#alias {write_mobs} {
+	#var mobsdb ${char_name}_mobs;
+	#class {mobsdb} {write} {$lib/${mobsdb}mobs.db};
+}
+
+#alias init_mobs {
+	#var mobsKWHash null;
+	#var mobsPRHash null;
+}
+
+#tab showmobs
+#alias showmobs {
+	#var tot_in_room 0;
+	#if {&mobs_in_room[]>0} {
+		#echo {<170>Num    Mobs in Room                             KeyW  Pr  };
+		#echo {-------------------------------------------------------------------};
+			#foreach {*mobs_in_room[%*]} {_p} {
+				#foreach {*mobs_in_room[$_p][%*]} {_i} {
+					#math tot_in_room $tot_in_room + 1;
+					diaLog zone Mob:$_i is $mobs_in_room[$_i];
+					#var _mob_inroom $mobs_in_room[$_p][$_i];
+					#var _kw {@mobsKWFromLong{$_mob_inroom}};
+					#var _pr {@mobsPRFromLong{$_mob_inroom}};
+					#format mobline {[%+2s]<370><dca> %-42.42s<070> (<170>%.3s<070>) (%s<070>)} 
+					{$tot_in_room}
+					{$mobs_in_room[$_p][$_i]}
+					{$_kw}
+					{@prColor{$_pr}};
+					#echo $mobline
+			}
+		};
+		info mobs To add a mob to the DB use: `DBAddMob` <mobnumber> <keyw> <priority>;
+		info mobs To remove a mob, use: `DBRemoveMob` <mobnumber>
+	};
+	#else {
+		info mobs No mobs in room.;
+		#cr
+	}
+}
+
+#tab DBAddMob
+#alias {DBAddMob} {
+	#if {"%1"!="" && "%2"!="" && "%3"!=""} {
+			#var {roomIndex} {%1};
+			#var {keyw_tmp} {%2};
+			#var {pr_tmp} {%3};
+			#var tot_in_room 0;
+			#foreach {*mobs_in_room[%*]} {_i} {
+					#foreach {$mobs_in_room[$_i][%*]} {_j} {
+							#math tot_in_room $tot_in_room+1;
+							#if {$roomIndex==$tot_in_room} {
+									#var mobsKWHash[@hash{$_j}] $keyw_tmp;
+									#var mobsPRHash[@hash{$_j}] $pr_tmp;
+									write_mobs;
+									#format {addMob} {%.42s} {$_j};
+									info mobs Mob $addMob with key '$keyw_tmp' added to DB.
+							}
+					}
+			};
+	};
+	#else {
+			info mobs You must provide 3 arguments, type showMobs for help.
+	}
+}
+
+#alias {DBRemoveMob} {
+	#var tot_in_room 0;
+	#if {@isD{%1}} {
+		diaLog path DB remove arg is digit;
+			#foreach {*mobs_in_room[%*]} {_i} {
+					#foreach {$mobs_in_room[$_i][%*]} {_j} {
+							#math tot_in_room $tot_in_room+1;
+							#if {"%1"=="$tot_in_room"} {diaLog kill checking $_j;
+									#if {&mobsKWHash[@hash{$_j}]} {
+											#unvar mobsKWHash[@hash{$_j}];
+											#unvar mobsPRHash[@hash{$_j}];
+											#format {remMob}  {%.42s} {$_j};
+											write_mobs;
+											info mobs Mob $remMob removed from database.
+									} {
+											info mobs Mob not in database.
+									}
+							}
+					}
+			}
+	};
+	#else {
+			info mobs You must provide the mob in room number.
+	}
+}
+
+#tab DBRemoveMob
+
+#nop -- iterates through mobs_in_room, attacking if we have a valid keyword. If we come to the end
+#nop -- of a priority section we clear that priority.
+#alias {mobAttack} {
+	#if {&mobs_in_room[]>0} {
+			#if {"$MSDP_POSITION"!="fighting"} {
+					#foreach {*mobs_in_room[%*]} {_mir} {
+							#if {&mobs_in_room[$_mir][1]} {
+									#if {"@mobsKWFromLong{$mobs_in_room[$_mir][1]}"!="null"} {
+											#line sub {vars;func} {$skill[opener] @mobsKWFromLong{$mobs_in_room[$_mir][1]}};
+											diaLog path doing attack on @mobsKWFromLong{$mobs_in_room[$_mir][1]};
+											diaLog path Mobs in room: &mobs_in_room[];
+											#list mobs_in_room[$_mir] delete 1;
+											diaLog path doing mobs in room $_mir delete spot 1;
+											#if {&{mobs_in_room[$_mir][1]}==0} {
+													#unvar mobs_in_room[$_mir];
+													diaLog path doing pr list delete
+											};
+											#break
+									};
+							}
+					}
+			};
+			#else {
+					info mobs Fighting, not attacking.
+			}
+	};
+	#else {
+			info mobs No mobs in room.;
+			event_raise clearSpellLock
+	}
+}
+
+#alias kk mobAttack
+
+#nop --
+#nop functions
+#nop --
+
+#function mobsKWFromLong {
+	diaLog kill KWFromLong received arg %0;
+	#format _mktmp {%H} {%0};
+	#if {&mobsKWHash[$_mktmp]} {
+			diaLog kill Returning $mobsKWHash[$_mktmp];
+			#return $mobsKWHash[$_mktmp]
+	} {
+			#return null
+	}
+}
+
+#nop -- returns priority, if one exists, 1 (highest) if none
+#function mobsPRFromLong {
+	#format _mptmp {%H} {%0};
+	#if {&mobsPRHash[$_mptmp]} {
+			#return $mobsPRHash[$_mptmp]
+	} {
+			#return 1
+	}
+}
+
+#function {prColor} {
+	#if {%1<2} {#return <118>%1};
+	#if {%1<3} {#return <138>%1};
+	#return <148>%1
+}
+
+#function killableMobs {
+	#local _kmobs 0;
+	#foreach {*mobs_in_room[%*]} {_km} {
+			#foreach {$mobs_in_room[$_km][%*]} {_kkm} {
+					diaLog kill Sending arg $_kkm to mobsKWFromLong;
+					#var KW_tmp @mobsKWFromLong{$_kkm};
+					#if {"$KW_tmp"!="null"} {
+							#return 1;
+							#break
+					};
+			}
+	};
+	#return $_kmobs
+}
+
+read_mobs
+
+#class mobs close

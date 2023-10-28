@@ -24,7 +24,7 @@ Usage:\n
 
 #nop simple toggle routine for on/off;
 #alias {toggle} {
-    #if {&toggle[%1]} {
+    #if {&{toggle[%1]}} {
 
         #nop Regular toggle, no preference given;
         #if {"%2" == ""} {
@@ -49,18 +49,22 @@ Usage:\n
 } {9}
 
 #alias {^toggle$} {
-    #foreach {*toggle[%*]} tmp {
-        #if {"$toggle[$tmp]" == "on"} {
-            #format line {<ddf>%+20s <078>- <cfc>%s} {$tmp} {$toggle[$tmp]};
-        } {
-            #format line {<ddf>%+20s <078>- <fcc>%s} {$tmp} {$toggle[$tmp]};
-        };
-        #echo {$line}
+    #if { &{toggle} } {
+        #foreach {*toggle[%*]} tmp {
+            #if {"$toggle[$tmp]" == "on"} {
+                #format line {<ddf>%+20s <078>- <cfc>%s} {$tmp} {$toggle[$tmp]};
+            } {
+                #format line {<ddf>%+20s <078>- <fcc>%s} {$tmp} {$toggle[$tmp]};
+            };
+            #echo {$line}
+        }
+    } {
+        warn preferences No toggle options set.
     }
 } {8}
 
 #alias {^%w on$} {
-    #if {&toggle[%1]} {
+    #if {&{toggle[%1]}} {
         toggle %1 on;
         info preferences '%1' is now on;
         _preferences_save
@@ -70,7 +74,7 @@ Usage:\n
     }
 }
 #alias {^%w off$} {
-    #if {&toggle[%1]} {
+    #if {&{toggle[%1]}} {
         toggle %1 off;
         info preferences '%1' is now on;
         _preferences_save

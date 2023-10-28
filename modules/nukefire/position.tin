@@ -1,0 +1,88 @@
+#class position kill
+#class position open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/position-description {Position tracking for Nukefire}
+#var nukefire/position-help {
+	Since Nukefire doesn't have MSDP_POSITION, we have to\n
+	screen scrape for position. May not be accurate in all\n
+	situations.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/position-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/position
+	} {
+		fail_module nukefire/position unknown reason
+	}
+}
+
+event_register {variable MSDP_OPPONENT_NAME} opponentPos {opponent_pos {%2} {%3}}
+event_register updatePosition update_position {update_position %2}
+event_register {variable position} update_MSDP_POSITION {update_msdp_pos %2}
+
+#event {VARIABLE UPDATED position[current]} {
+	event_raise {variable position}
+}
+
+#alias update_msdp_pos {
+	#nop %0;
+	#format MSDP_POSITION {%n} {%1}
+}
+
+#action {^You are {standing|sitting|resting|hovering|flying|sleeping|}.$} {
+	#var position[current] %1
+} 
+
+#action {^You are fighting %1.$} {
+	#var position[current] fighting
+}
+
+#action {^You go to sleep.} {
+	event_raise updatePosition sleeping
+}
+
+#action {^You awaken, and sit up.$} {
+	event_raise updatePosition sitting
+}
+
+#action {^You stand up.} {
+	event_raise updatePosition standing
+}
+
+#action {^You sit down.} {
+	event_raise updatePosition sitting
+}
+
+#action {^Maybe you should get to your feet first?} {
+	event_raise updatePosition sitting
+}
+
+#action {^You sit down and rest your tired bones.} {
+	event_raise updatePosition resting
+}
+
+#alias opponent_pos {
+	diaLog kill oppponent position called;
+	#if {"%1"==""} {
+		event_raise updatePosition standing
+	};
+	#else {
+		event_raise updatePosition fighting
+	}
+}
+
+#alias update_position {
+	#nop %0;
+	#var MSDP_POSITION %1;
+	diaLog kill Position="$MSDP_POSITION"
+}
+
+#class position close
