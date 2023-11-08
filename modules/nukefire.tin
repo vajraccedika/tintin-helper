@@ -57,7 +57,7 @@
 	};
 
 	info nukefire Loading nukefire modules;
-	#foreach {position;combat;diag;nuke_func;inventory;mobs;track;map;money;status;exp;combat;multidisplay} tmp {
+	#foreach {position;combat;diag;nuke_func;inventory;mobs;track;combat;map;money;status;exp;multidisplay} tmp {
 		load_module nukefire/$tmp
 	};
 	#line oneshot #tick {clear} {#buffer end} {0.5};
