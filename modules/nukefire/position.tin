@@ -24,12 +24,16 @@
 	}
 }
 
-event_register {variable MSDP_OPPONENT_NAME} opponentPos {opponent_pos {%2} {%3}}
-event_register updatePosition update_position {update_position %2}
-event_register {variable position} update_MSDP_POSITION {update_msdp_pos %2}
+event_register {variable MSDP_OPPONENT_NAME} position {opponent_pos {%2} {%3}}
+event_register updatePosition position {update_position %2}
+event_register {variable position} position {update_msdp_pos %2}
 
 #event {VARIABLE UPDATED position[current]} {
-	event_raise {variable position}
+	event_raise {variable position} %1
+}
+
+#event {VARIABLE UPDATED MSDP_POSITION} {
+	event_raise {variable MSDP_POSITION}
 }
 
 #alias update_msdp_pos {
@@ -46,6 +50,16 @@ event_register {variable position} update_MSDP_POSITION {update_msdp_pos %2}
 }
 
 #action {^You go to sleep.} {
+	diaLog state Position: sleeping;
+	event_raise updatePosition sleeping
+}
+
+#action {You go to sleep.$} {
+	diaLog state Position: sleeping;
+	event_raise updatePosition sleeping
+}
+
+#action {^In your dreams, or what?$} {
 	event_raise updatePosition sleeping
 }
 
@@ -53,19 +67,23 @@ event_register {variable position} update_MSDP_POSITION {update_msdp_pos %2}
 	event_raise updatePosition sitting
 }
 
-#action {^You stand up.} {
+#action {^You stand up.$} {
 	event_raise updatePosition standing
 }
 
-#action {^You sit down.} {
+#action {^You are already standing.$} {
+	event_raise updatePosition standing
+}
+
+#action {^You sit down.$} {
 	event_raise updatePosition sitting
 }
 
-#action {^Maybe you should get to your feet first?} {
+#action {^Maybe you should get to your feet first?$} {
 	event_raise updatePosition sitting
 }
 
-#action {^You sit down and rest your tired bones.} {
+#action {^You sit down and rest your tired bones.$} {
 	event_raise updatePosition resting
 }
 
@@ -81,8 +99,21 @@ event_register {variable position} update_MSDP_POSITION {update_msdp_pos %2}
 
 #alias update_position {
 	#nop %0;
-	#var MSDP_POSITION %1;
+	#var position[current] %1;
 	diaLog kill Position="$MSDP_POSITION"
+}
+
+#alias {^sl$} {
+	#send sleep
+}
+
+#alias {^st$} {
+	#if {"$position[current]"=="sleeping"} {
+		#send wake;
+		#send stand
+	} {
+		#send stand
+	}
 }
 
 #class position close

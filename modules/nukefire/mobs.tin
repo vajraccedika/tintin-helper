@@ -20,45 +20,8 @@
 	}
 }
 
-#nop {
-	\e[0;33mLarry Bird rubs his sore back.
-	\e[0m\e[0;33mLeslie Visser sticks a microphone in your face.
-	\e[0m\e[0;33mThe referee blows his little whistle at you.
-	\e[0m\e[0;33mShaq looks down at you and snickers.
-	\e[0m\e[0;33mPatrick Ewing howls and beats his chest.
-}
-
-#nop {
-	\e[0;36mThe Temple Ruins - \e[0;36m[pre-dawn] [Inside]\e[0m\e[0m
-	You stand inside a massive temple, the once pristine walls now cracked and
-	crumbling, the arches and pillars showing signs of decay.  The ceiling, once a
-	marvel of technology, flickers with a dim, ominous light.  The air is thick with
-	dust and the scent of rusted metal.  The only sounds are the distant hums and
-	whirs of ancient machines, struggling to maintain function after years of
-	neglect.  Side passages lead north, south, and west, each one shrouded in
-	darkness.  Outside the corroded doorway to the east, you catch a glimpse of
-	Technology Square, now a barren wasteland.  A stairway descends downwards,
-	leading to the Medical Center.  Before you stands a towering statue, its
-	metallic surface weathered and pitted, a testament to the ravages of time.
-
-	\e[0;34mA glowing aura fills the room.\e[0m
-
-	\e[0;32m\e[0;32mA large, gray storage locker stands bolted to the wall.
-	\e[0m\e[0;32m\e[0;32mA large public display terminal is mounted on a wall here.
-	\e[0m\e[0;32m\e[0;32mAn official looking sign is posted here
-	\e[0m\e[0;33mA whirling blur is here.\e[0m
-	\e[0;33m(\e[1;31mgroup\e[0;33m) Jegs is standing here.
-	\e[0m\e[0;33m(\e[1;31mleader\e[0;33m) Jags is standing here.
-	\e[0m\e[0;33m(\e[1;31mgroup\e[0;33m) Scoop is standing here.
-	\e[0m\e[0;33m(\e[1;31mgroup\e[0;33m) Hamster is standing here.
-	\e[0m\e[0;33m(\e[1;31mgroup\e[0;33m) Bacon is standing here.
-	\e[0m\e[0;33m(\e[1;31mleader\e[0;33m) Biscuit is standing here.
-	\e[0m\e[0;33mMo is standing here.
-	\e[0m
-}
-
-event_register mobLine add_mob {add_mob {%2}}
-event_register roomLook clear_mobs {clear_mobs}
+event_register mobLine mobs {add_mob {%2}}
+event_register roomLook mobs {clear_mobs}
 
 #action {~^\e[0;33m%1$} {
 	event_raise mobLine {%1}
@@ -73,13 +36,26 @@ event_register roomLook clear_mobs {clear_mobs}
 	diaLog zone add_mob received input:%1:;
 	#var _mob @ansiStrip{%1};
 	#replace _mob {(Eldritch Aura)} {};
+	#replace _mob {(s)} {};
+	#replace _mob {(leader)} {};
+	#replace _mob {(group)} {};
 	diaLog zone pre-stripped mob is "$_mob";
-	#format {mob} {%p} {$_mob}; 
-	diaLog zone post-stripped mob is "$mob";
+	#format {_mob} {%p} {$_mob}; 
+	diaLog zone post-stripped mob is "$_mob";
 	#if {$room[looking]==1} {
 		diaLog zone room[looking] is true;
-		#list mobs_in_room[@mobsPRFromLong{%1}] add {$mob}
+		diaLog zone Priority for mob is @mobsPRFromLong{$_mob};
+		#list mobs_in_room[@mobsPRFromLong{$_mob}] add {$_mob}
 	}
+}
+
+#alias test_hash {
+	#local _arg %1;
+	#var _arg2 %1;
+	#format _raw_hash {%H} {%1};
+	#format _loc_hash {%H} {$_arg};
+	#format _var_hash {%H} {$_arg2};
+	#echo {<cfa>Does $_raw_hash == $_var_hash? == $_loc_hash}
 }
 
 #alias clear_mobs {
@@ -95,16 +71,16 @@ event_register roomLook clear_mobs {clear_mobs}
 	#class {mobsdb} {open};
 	#var mobsKWHash null;
 	#var mobsPRHash null;
-	#nop -- included for debug info mobs mobsKWHash: $mobsKWHash;
-	#nop -- info mobs mobsPRHash: $mobsPRHash;
-	#read $lib/${mobsdb}.db;
-	#if {$mobs_data==1} {info mobs Reading mobs database for '$mobsdb'.};
+	#nop -- included for debug uinfo mobs mobsKWHash: $mobsKWHash;
+	#nop -- uinfo mobs mobsPRHash: $mobsPRHash;
+	#read $db/${mobsdb}.db;
+	#if {$mobs_data==1} {uinfo mobs Reading mobs database for '$mobsdb'.};
 	#class {mobsdb} {close};
 }
 
 #alias {write_mobs} {
 	#var mobsdb ${char_name}_mobs;
-	#class {mobsdb} {write} {$lib/${mobsdb}mobs.db};
+	#class {mobsdb} {write} {$db/${mobsdb}.db};
 }
 
 #alias init_mobs {
@@ -133,11 +109,11 @@ event_register roomLook clear_mobs {clear_mobs}
 					#echo $mobline
 			}
 		};
-		info mobs To add a mob to the DB use: `DBAddMob` <mobnumber> <keyw> <priority>;
-		info mobs To remove a mob, use: `DBRemoveMob` <mobnumber>
+		uinfo mobs To add a mob to the DB use: `DBAddMob` <mobnumber> <keyw> <priority>;
+		uinfo mobs To remove a mob, use: `DBRemoveMob` <mobnumber>
 	};
 	#else {
-		info mobs No mobs in room.;
+		uinfo mobs No mobs in room.;
 		#cr
 	}
 }
@@ -157,13 +133,13 @@ event_register roomLook clear_mobs {clear_mobs}
 									#var mobsPRHash[@hash{$_j}] $pr_tmp;
 									write_mobs;
 									#format {addMob} {%.42s} {$_j};
-									info mobs Mob $addMob with key '$keyw_tmp' added to DB.
+									uinfo mobs Mob $addMob with key '$keyw_tmp' added to DB.
 							}
 					}
 			};
 	};
 	#else {
-			info mobs You must provide 3 arguments, type showMobs for help.
+			uinfo mobs You must provide 3 arguments, type showMobs for help.
 	}
 }
 
@@ -180,16 +156,16 @@ event_register roomLook clear_mobs {clear_mobs}
 											#unvar mobsPRHash[@hash{$_j}];
 											#format {remMob}  {%.42s} {$_j};
 											write_mobs;
-											info mobs Mob $remMob removed from database.
+											uinfo mobs Mob $remMob removed from database.
 									} {
-											info mobs Mob not in database.
+											uinfo mobs Mob not in database.
 									}
 							}
 					}
 			}
 	};
 	#else {
-			info mobs You must provide the mob in room number.
+			uinfo mobs You must provide the mob in room number.
 	}
 }
 
@@ -218,11 +194,11 @@ event_register roomLook clear_mobs {clear_mobs}
 					}
 			};
 			#else {
-					info mobs Fighting, not attacking.
+					uinfo mobs Fighting, not attacking.
 			}
 	};
 	#else {
-			info mobs No mobs in room.;
+			uinfo mobs No mobs in room.;
 			event_raise clearSpellLock
 	}
 }
@@ -246,6 +222,7 @@ event_register roomLook clear_mobs {clear_mobs}
 
 #nop -- returns priority, if one exists, 1 (highest) if none
 #function mobsPRFromLong {
+	diaLog zone mobs PR from long received arg:"%0";
 	#format _mptmp {%H} {%0};
 	#if {&mobsPRHash[$_mptmp]} {
 			#return $mobsPRHash[$_mptmp]

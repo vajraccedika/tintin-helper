@@ -24,17 +24,37 @@
 	}
 }
 
-#nop event_register mapEnterRoom test {#nop %0;debug %1:%2:%3}
-#nop event_register roomLook 3_room_cap {do_room_cap}
-event_register roomLook room_info {get_room_info {%2} {%3} {%4}}
-#nop event_register roomLook 9_room_entry {check_room_entry}
-event_register prompt end_room_look {end_room_look}
-event_register prompt end_exits {end_exits}
-event_register updateExits clear_exits {clear_exits}
-event_register endRoomLook do_room_clear {do_room_clear}
-event_register endRoomLook do_room_hash {do_room_hash}
-event_register recall clear_exits {clear_exits}
-#nop event_register updateExits 9clear_exits {clear_exits}
+#nop -- oneday if we have msdp room info
+#nop {
+	#map create 100000;
+	#map flag nofollow;
+	#map flag vtmap on;
+	#map flag static;
+	#map flag blockgraphics on}
+
+#nop --
+#nop Events
+#nop --
+
+event_register roomLook map {get_room_info {%2} {%3} {%4}}
+event_register prompt map_end_room_look {end_room_look}
+event_register prompt map {end_exits}
+event_register updateExits map {clear_exits}
+event_register endRoomLook room_clear {do_room_clear}
+event_register endRoomLook room_hash {do_room_hash}
+event_register endRoomLook generate_room_info {generate_room_info}
+event_register recall map {clear_exits}
+#nop event_register mapEnterRoom map {map_room}
+
+#nop -- This is a bad room that doesn't trigger room entry
+#nop {
+	\e[0m\e[22;38;5;118ml\r\n
+	\e[0m
+	\e[0;36mCenter Road, East - \e[0;36m[daybreak] [Smooth]\e[0m\e[0m}
+
+#nop --
+#nop Actions
+#nop --
 
 #action {~\e[0;36m%1 - \e[0;36m[%2] [%3]\e[0m\e[0m} {
 	event_raise roomLook {%1} {%2} {%3};
@@ -55,9 +75,73 @@ event_register recall clear_exits {clear_exits}
 	}
 } {4}
 
+#action {{.*}} {
+	#if {$room[looking]==1} {
+		diaLog map roomcap:"%0";
+		#format room[desc] {%s%s}
+		{$room[desc]}
+		{%0}
+	}
+} {9}
+
+#action {^With a chant lost to the eons, you transcend space and time, fading into the void!$} {
+	event_raise recall
+} {4}
+
+#action {^Whispers of forgotten aeons echo, 'We return you return to your celestial sanctuary.'} {
+	#nop
+} {4}
+
+#action {{.*}} {
+	#if {$room[looking]==1} {
+		diaLog map roomcap:"%0";
+		#format room[desc] {%s%s}
+		{$room[desc]}
+		{%0}
+	}
+} {9}
+
+#action {^With a chant lost to the eons, you transcend space and time, fading into the void!$} {
+	event_raise recall
+} {4}
+
+#action {^Whispers of forgotten aeons echo, 'We return you return to your celestial sanctuary.'} {
+	#nop
+} {4}
+
+#action {^You recite a recall scroll which dissolves.$} {
+	event_raise recall
+} {4}
+
+#nop --
+#nop Aliases
+#nop --
+
+#nop -- generate formatted line for room info block
+#alias generate_room_info {
+	#nop %0;
+	#var _ex_line {};
+	#foreach {North;East;South;West;Up;Down} {_x} {
+		#if {&{room[exits][$_x]}} {
+			#format _ex_line {%s<Ff0d5a1>%.1s : <Ffcfcfc>%s\n}
+		{$_ex_line}
+		{$_x}
+		{@formatExit{$room[exits][$_x];7;newline}}
+		}
+	};
+	#format _room_line {<Ff0d5a1>Location info\nRoom  : <Ffff>%+12s\n<Ff0d5a1>Sector: <Ffcfcfc>%s\n<Ff0d5a1>%s\n%s}
+	{@formatExit{$room[name];10;tab}}
+	{$room[sector]}
+	{Exits :}
+	{$_ex_line};
+	#if {@is_alias{display_left_tiles}} {display_left_tiles}
+}
+
+
+
 #alias get_room_info {
 	#nop %0;
-	diaLog kill room_info called;
+	diaLog map room_info called;
 	#var room[name] %1;
 	#var room[time] %2;
 	#var room[sector] %3;
@@ -83,7 +167,8 @@ event_register recall clear_exits {clear_exits}
 #alias end_room_look {
 	#nop %0;
 	#if {$room[looking]==1} {
-		event_raise endRoomLook
+		event_raise endRoomLook;
+		diaLog map endRoomLook
 	}
 }
 
@@ -93,10 +178,8 @@ event_register recall clear_exits {clear_exits}
 }
 
 #alias do_room_hash {
+	diaLog map room hash called;
 	#nop %0;
-	#nop #if &{exits} {
-		#var room[exits] $exits
-	};
 	#unvar room[time];
 	#format new_room_hash {%H} $room;
 	#if {$new_room_hash == $old_room_hash} {
@@ -104,26 +187,71 @@ event_register recall clear_exits {clear_exits}
 	};
 	#else {
 		diaLog map looking at new room;
+		event_raise mapEnterRoom;
 		#var old_room_hash $new_room_hash;
 	}
 }
 
-#action {{.*}} {
-	#if {$room[looking]==1} {
-		diaLog kill roomcap:"%0";
-		#format room[desc] {%s%s}
-		{$room[desc]}
-		{%0}
+#nop -- we're not doing any mapping because we don't have MSDP room info
+#nop #alias map_room {
+	#nop %0;
+	#map set roomterrain $room[sector];
+	#map set roomname $room[name];
+	#map set roomid $new_room_hash;
+	#foreach *room[exits][%*] _re {
+		#map dig @shortDir{$_re} NEW;
 	}
-} {9}
+}
 
-#action {^With a chant lost to the eons, you transcend space and time, fading into the void!$} {
-	event_raise recall
-} {4}
 
-#action {^Whispers of forgotten aeons echo, 'We return you return to your celestial sanctuary.'} {
-	#nop
-} {4}
+
+#function shortDir {
+	#switch {"%1"} {
+		#case {"North"} {#return n};
+		#case {"South"} {#return s};
+		#case {"East"} {#return e};
+		#case {"West"} {#return w};
+		#case {"Up"} {#return u};
+		#case {Down} {#return d}
+	}
+}
+
+#function formatExit {
+	diaLog map args:%1:%2:%3:;
+	#local {_char[newline]} {\n    };
+	#local _char[tab] \n\t;
+	#nop takes args string, limit;
+	#var last_space 0;
+	#list _tmp_line clear;
+	#nop takes arg: exit room name;
+	#math limit $left_panel - %2;
+	#math _max_l $limit * 2 - 4;
+	#if {@len{%1} >= $limit} {
+		#list _tmp_line explode {%1};
+		#loop {1} {$limit} {_tl} {
+			#if {"$_tmp_line[$_tl]"==" "} {
+				#var last_space $_tl;
+			};
+		};
+		#if {$last_space > 0} {
+			#list _tmp_line set $last_space {$_char[%3]};
+			#list _tmp_line collapse;
+			#format _tmp_line {%.${_max_l}s} {$_tmp_line};
+			#return {<Ffcfcfc>$_tmp_line}
+		}
+	};
+	#else {
+		#return %1
+	}
+}
+
+#nop -- set room info to first left tile
+#alias init_room_info {
+	set_left_tile 5 <B373b41> _room_line 16 box;
+	generate_room_info
+}
+
+init_room_info
 
 #nop --
 #nop highlights

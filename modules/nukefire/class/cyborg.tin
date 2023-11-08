@@ -22,7 +22,8 @@
 	}
 }
 
-
+init toggle[damcon] preferences off
+init toggle[turbo] preferences off
 
 #var skill[opener] kill
 #var skill[combat] pound

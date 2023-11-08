@@ -5,8 +5,8 @@
 #nop Class Definitions
 #nop --
 
-#var exp-description {Tracks and updates exp in Nukefire}
-#var exp-help {
+#var nukefire/exp-description {Tracks and updates exp in Nukefire}
+#var nukefire/exp-help {
 	Tracks and updates exp, updates odometers.
 }
 
@@ -28,15 +28,42 @@
 event_register prompt update_tnl {update_tnl %6}
 event_register {variable MSDP_EXPERIENCE} expCounter {exp_counter}
 event_register {variable MSDP_EXPERIENCE} initExp {init_exp}
+event_register {variable MSDP_EXPERIENCE} exp_info {generate_exp_info}
 
 #event {VARIABLE UPDATED exp_mins} {
 	event_raise expMins
 }
 
+#nop --
+#nop -- Vars
+#nop --
+
 #variable {exp_min} {0}
 #variable {exp_hour} {0}
 #variable {mins_to_level} {0}
+#var expbar_text TNL
 #format exp_start_time {%T}
+
+#nop --
+#nop Actions
+#nop --
+
+#action {^You need %d exp to reach your next level.} {
+	#var MSDP_EXPERIENCE_TNL %1
+}
+
+#action {^[ Remorts:%s%d ] [ Deaths:%s%d ] [ Experience:%s%d ]} {
+	#var remorts %2;
+	#var deaths %4;
+	#var exp[total] %6;
+	#if {$exp[start] < 0} {
+		#var exp[start] $exp[total]
+	}
+}
+
+#nop --
+#nop Alias
+#nop --
 
 #alias init_exp {
 	#nop %0;
@@ -50,13 +77,19 @@ event_register {variable MSDP_EXPERIENCE} initExp {init_exp}
 }
 
 #alias update_tnl {
-	#nop %0;
-	#var {_tnl_raw} {%1};
-	#if {&{_tnl_raw}} {
-		#replace _tnl_raw {)} {};
-		#replace _tnl_raw {(} {};
-		#var MSDP_EXPERIENCE_TNL $_tnl_raw
-	}
+  #nop %0;
+  #local _raw_prompt %0;
+  #replace _raw_prompt {<} {};
+  #replace _raw_prompt {>} {};
+  #replace _raw_prompt {(} {};
+  #replace _raw_prompt {)} {};
+  #list _prompt_list create $_raw_prompt;
+  #local _last_prompt $_prompt_list[-1];
+  #if {@isD{$_last_prompt}} {
+    #var MSDP_EXPERIENCE_TNL $_last_prompt
+  };
+  #math next_level $MSDP_LEVEL + 1;
+	#math real_exp_goal $exp_data[$next_level] - $exp_data[$MSDP_LEVEL]
 }
 
 #alias {exp_counter} {
@@ -67,33 +100,85 @@ event_register {variable MSDP_EXPERIENCE} initExp {init_exp}
 	#math exp_elapsed_time $exp_now_time - $exp_start_time;
 	#math exp_per_sec $exp[gain] / $exp_elapsed_time;
 	#math exp_min $exp_per_sec * 60;
-	#math exp_hour $exp_min_60;
-	#math expgoal_pct ($MSDP_EXPERIENCE / ($MSDP_EXPERIENCE_TNL * 100));
+	#math exp_hour $exp_min * 60;
+	#nop #math exp_goalpct ($MSDP_EXPERIENCE / $exp_data[$next_level] * 100);
+#if {$MSDP_EXPERIENCE_TNL == 0 && $MSDP_LEVEL == 50} {
+  #math exp_bar_pct 1 - ( ($MSDP_EXPERIENCE - 45000000) / 45000000 * 1.000)
+} {
+  #math exp_bar_pct ($MSDP_EXPERIENCE_TNL / $real_exp_goal * 1.000)
+};
 	#math mins_to_level $MSDP_EXPERIENCE_TNL / $exp_mins
 }
 
-#action {^[ Remorts:%s%d ] [ Deaths:%s%d ] [ Experience:%s%d ]} {
-	#var remorts %2;
-	#var deaths %4;
-	#var exp[total] %6;
-	#if {$exp[start] < 0} {
-		#var exp[start] $exp[total]
-	}
+#alias generate_exp_info {
+  #nop %0;
+  #math _xp_bar_length $left_panel - 3;
+  #format exp_info {<Ff0d5a1>XP: <Ffff>%s  <Ff0d5a1>XPH: <Ffff>%s\n %s<B5f819d>}
+  {@hNum{$MSDP_EXPERIENCE}}
+  {@hNum{$exp_hour}}
+  {@display_progress{$exp_bar_pct;@hNum{$MSDP_EXPERIENCE_TNL} $expbar_text;$_xp_bar_length}};
+  #if {@is_alias{display_left_tiles}} {display_left_tiles}
 }
 
-#nop {
-#nop #action {^You need %d exp to reach your next level.} {
-	#var exp[tnl] %1
-};
-
-#nop #action {^You receive %1 experience points.$} {
-	event_raise expGain %1
-};
-
-#nop #alias exp_gain {
-	#nop %0;
-	#math exp[total] $exp[total] + %1;
-	#math exp[tnl] $exp[tnl] - %1
+#alias init_exp_info {
+  set_left_tile 2 <B5f819d> exp_info 2 tile;
+  generate_exp_info
 }
+
+init_exp_info
+
+#VARIABLE {exp_data}
+{
+    {1} {1}
+    {2} {1500}
+    {3} {4000}
+    {4} {7000}
+    {5} {11000}
+    {6} {16000}
+    {7} {22000}
+    {8} {30000}
+    {9} {60000}
+    {10} {100000}
+    {11} {150000}
+    {12} {230000}
+    {13} {330000}
+    {14} {450000}
+    {15} {650000}
+    {16} {900000}
+    {17} {1200000}
+    {18} {1600000}
+    {19} {2100000}
+    {20} {2700000}
+    {21} {3400000}
+    {22} {4200000}
+    {23} {5100000}
+    {24} {6100000}
+    {25} {7200000}
+    {26} {8500000}
+    {27} {10000000}
+    {28} {11500000}
+    {29} {13000000}
+    {30} {15000000}
+    {31} {16500000}
+    {32} {18000000}
+    {33} {19500000}
+    {34} {21000000}
+    {35} {22500000}
+    {36} {24000000}
+    {37} {25500000}
+    {38} {27000000}
+    {39} {28500000}
+    {40} {30000000}
+    {41} {31500000}
+    {42} {33000000}
+    {43} {34500000}
+    {44} {36000000}
+    {45} {37500000}
+    {46} {39000000}
+    {47} {40500000}
+    {48} {42000000}
+    {49} {43500000}
+    {50} {45000000}
+    {51} {90000000}
 }
 #class exp close

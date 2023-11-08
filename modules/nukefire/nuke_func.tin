@@ -1,5 +1,5 @@
-#class nuke-func kill
-#class nuke-func open
+#class nuke_func kill
+#class nuke_func open
 
 #nop --
 #nop Class Definitions
@@ -272,5 +272,10 @@
 	}
 }
 
+#function int {
+	#format _int {%d} {%1};
+	#return $_int
+}
 
-#class functions close
+
+#class nuke_func close

@@ -1,8 +1,32 @@
 #class ranger kill
 #class ranger open
 
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/class/ranger-description {Ranger class utilities}
+#var nukefire/class/ranger-help {
+	Aliases and skill definitions for Ranger.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/class/ranger-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/class/ranger
+	} {
+		fail_module nukefire/class/ranger unknown reason
+	}
+}
 #alias heal {
 	sling 'heal' %1
+}
+
+#alias vig {
+	sling 'invig' %1
 }
 
 #var skill[opener] ambush

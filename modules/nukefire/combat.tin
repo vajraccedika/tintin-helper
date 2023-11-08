@@ -6,7 +6,10 @@
 #nop --
 
 #var nukefire/combat-description {Combat management for Nukefire}
-#var nukefire/combat-help {TBA}
+#var nukefire/combat-help {
+	Generates a left panel tile for combat with\n
+	enemy lifebar and player position.
+}
 
 #nop --
 #nop Modloader Stuff
@@ -19,5 +22,43 @@
 		fail_module nukefire/combat unknown reason
 	}
 }
+
+#nop --
+#nop Events
+#nop --
+
+event_register {variable MSDP_OPPONENT_HEALTH} combat_info {generate_combat_info}
+event_register {variable MSDP_OPPONENT_NAME} combat_info {generate_combat_info}
+event_register {variable MSDP_POSITION} combat_info {generate_combat_info}
+event_register mob_kill combat_info {generate_combat_info}
+
+#alias generate_combat_info {
+	#nop %0;
+	diaLog kills generate combat info called with pos: $MSDP_POSITION;
+	#if {"$MSDP_POSITION" == "Fighting"} {
+		#math _opp_health_bar $left_panel - 3;
+		#math _len_opp_name $_opp_health_bar - @len{$MSDP_POSITION};
+		#math _opp_health @pct{$MSDP_OPPONENT_HEALTH;$MSDP_OPPONENT_HEALTH_MAX}/100.0;
+		#var _opp_health @clamp{$_opp_health;0;1};
+		diaLog kills Opp health="$_opp_health";
+		#format combat_info {<Ff0d5a1>%s: <Ffff>%.${_len_opp_name}s\n %s<B5f819d>}
+		{$MSDP_POSITION}
+		{$MSDP_OPPONENT_NAME}
+		{@display_progress{$_opp_health;$MSDP_OPPONENT_NAME;$_opp_health_bar;health}}
+	} {
+		#format combat_info {<Ff0d5a1>Position: <Ffff>%s\n<Ff0d5a1>☠ : <Ffff>%s}
+		{$MSDP_POSITION}
+		{$_dead_mob}
+	};
+	#if {@is_alias{display_left_tiles}} {display_left_tiles}
+}
+
+#alias init_combat_info {
+	set_left_tile 4 <B5f819d> combat_info 2 tile;
+	init _dead_mob -;
+  generate_combat_info
+}
+
+init_combat_info
 
 #class combat close

@@ -34,8 +34,18 @@
 	event_raise updateTotalMoney
 }
 
+#nop --
+#nop Events
+#nop --
+
 event_register creditsChange calc_creds {credits_change_calc %2 %3}
-event_register updateMoney calc_total_creds {calc_total_creds}
+event_register {variable MSDP_MONEY} calc_total_creds {calc_total_creds}
+event_register {variable MSDP_MONEY} set_cash {set_cash %2}
+event_register {variable MSDP_MONEY} money_info {generate_money_info}
+
+#nop --
+#nop Actions
+#nop --
 
 #action {^[ Con:%s%d ] [ Kills:%s%d ] [ Credits:        \$%s%d ]} {
 	#var con %2;
@@ -44,11 +54,7 @@ event_register updateMoney calc_total_creds {calc_total_creds}
 }
 
 #action {^Your current balance is %d credits.$} {
-	#var credits[balance] %1
-}
-
-#action {^There {were|was} %d {credits|credit}.$} {
-	event_raise creditsChange gain %2
+	#var credits[balance] %1;
 }
 
 #action {^You withdraw %d credits.$} {
@@ -57,6 +63,14 @@ event_register updateMoney calc_total_creds {calc_total_creds}
 
 #action {^You deposit %d credits.$} {
 	event_raise creditsChange deposit %1;
+}
+
+#nop --
+#nop Alias
+#nop --
+
+#alias set_cash {
+	#var credits[cash] %1
 }
 
 #alias credits_change_calc {
@@ -77,10 +91,10 @@ event_register updateMoney calc_total_creds {calc_total_creds}
 			#math credits[balance] $credits[balance] - %2
 		};
 		#default {
-			info tools Unknown credits change calc: `%1`.
+			uinfo tools Unknown credits change calc: `%1`.
 		}
-	}
-	
+	};
+	generate_money_info
 }
 
 #alias {droc %1} {
@@ -89,13 +103,29 @@ event_register updateMoney calc_total_creds {calc_total_creds}
 }
 
 #alias depall {
-	deposit $credits[cash]
+	deposit $MSDP_MONEY
 }
 
 #alias calc_total_creds {
 	#nop %0;
 	#math credits[total] $credits[cash] + $credits[balance]
 }
+
+#alias generate_money_info {
+	#nop %0;
+	#format money_info {<Ff0d5a1>Credits:<Ffff>\n🪙 %+6s 🏦 %+5s 💰 %+5s}
+	{@hNum{$MSDP_MONEY}}
+	{@hNum{$credits[balance]}}
+	{@hNum{$credits[total]}};
+	#if @is_alias{display_left_tiles} {display_left_tiles}
+}
+
+#alias init_money_info {
+	set_left_tile 3 <B5f819d> money_info 2 tile;
+	generate_money_info
+}
+
+init_money_info
 
 #nop {( 4) A few credits is lying here.
 ( 3) Several credits is lying here.

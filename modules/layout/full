@@ -5,7 +5,7 @@
 	#var tile_bg2 Bff3b41;
 
 	#var top_rows 11;
-	#var bottom_rows 2;
+	#var bottom_rows 3;
 	#math bp_top {-1 - $bottom_rows};
 	#math left_panel 30;
 	#math right_panel 45;
@@ -79,7 +79,7 @@
         #math _top_row {$_bottom_row + 1};
         #math _bottom_row {$_top_row + $tile[height] - 1};
 
-        #draw $tile[color] tile $_top_row 1 $_bottom_row ${left_rightside} ${$tile[content]}
+        #draw $tile[color] $tile[type] $_top_row 1 $_bottom_row ${left_rightside} ${$tile[content]}
     }
 }
 

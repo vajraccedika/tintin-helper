@@ -22,12 +22,24 @@
 	}
 }
 
+#nop --
+#nop Events
+#nop --
 
-#nop {
-	[||||||||||||||||||||||||||||||||||||||||||||||||||] - hit    1167/1167
-[||||||||||||||||||||||||||||||||||||||||||||||||||] - mana   722/722
-[||||||||||||||||||||||||||||||||||||||||||||||||||] - move   666/666
-}
+event_register prompt 5update_hmv {update_hmv %0}
+event_register prompt 9hmv_change_check {hmv_change_check %2 %3}
+event_register prompt draw_hmv_bars draw_hmv_bars
+event_register {variable MSDP_HEALTH} hmvchange hmvchange
+event_register {variable MSDP_MOVEMENT} hmvchange hmvchange
+event_register {variable MSDP_MANA} hmvchange hmvchange
+event_register {variable MSDP_LEVEL} status generate_character_info
+event_register {variable MSDP_EXPERIENCE} status generate_character_info
+
+#var prompt_regexp {< [0-9]+H [0-9]+M [0-9]+V\s?(\(news\))?\s?(\(motd\))?\s?(\(\d+\))?\s?>}
+
+#nop --
+#nop Actions
+#nop --
 
 #action {^[%1] - %2 %s %d/%d$} {
 	#var hmv[current][%2] %4;
@@ -43,13 +55,6 @@
 	#var name %1
 } {4}
 
-event_register prompt 5update_hmv {update_hmv %3 %4 %5}
-event_register prompt 9hmv_change_check {hmv_change_check %2 %3}
-
-event_register {variable MSDP_HEALTH} hmvchange hmvchange
-event_register {variable MSDP_MOVEMENT} hmvchange hmvchange
-event_register {variable MSDP_MANA} hmvchange hmvchange
-
 #alias hmvchange {
 	#nop %0;
 	#nop new val: %2, old val %3;
@@ -58,28 +63,29 @@ event_register {variable MSDP_MANA} hmvchange hmvchange
 
 #alias update_hmv {
 	#nop %0;
-	#var prompt_h @ansiStrip{%1};
-	#var prompt_m @ansiStrip{%2};
-	#var prompt_v @ansiStrip{%3};
-	#replace prompt_h {H} {};
-	#replace prompt_m {M} {};
-	#replace prompt_v {V} {};
-	#var hmv[current][hit] $prompt_h;
-	#var MSDP_HEALTH $prompt_h;
-	#var MSDP_MANA $prompt_m;
-	#var MSDP_MOVEMENT $prompt_v;
-	#var hmv[current][mana] $prompt_m;
-	#var hmv[current][move] $prompt_v
+	#var _raw_prompt %0;
+	#replace _raw_prompt {prompt } {};
+	#format _raw_prompt {%p} {$_raw_prompt};
+	#var _raw_prompt @strip_ansi{$_raw_prompt};
+	diaLog max update_hmv received"$_raw_prompt";
+	#regexp {$_raw_prompt} {{$prompt_regexp}} {
+		diaLog max valid prompt;
+		diaLog max 1:"%1":2"%2":3:"%3":4"%4":5:"%5";
+		#var prompt_h @ansiStrip{%3};
+		#var prompt_m @ansiStrip{%4};
+		#var prompt_v @ansiStrip{%5};
+		#replace prompt_h {H} {};
+		#replace prompt_m {M} {};
+		#replace prompt_v {V} {};
+		#var hmv[current][hit] $prompt_h;
+		#var MSDP_HEALTH $prompt_h;
+		#var MSDP_MANA $prompt_m;
+		#var MSDP_MOVEMENT $prompt_v;
+		#var hmv[current][mana] $prompt_m;
+		#var hmv[current][move] $prompt_v
+	}
 }
-#function returnHMV {
-	#var _h @ansiStrip{%1};
-	#var _m @ansiStrip{%2};
-	#var _v @ansiStrip{%3};
-	#replace _h {H} {};
-	#replace _m {M} {};
-	#replace _v {V} {};
-	#return {h;m;v}
-}
+
 
 #alias hmv_change_check {
 	#nop %0;
@@ -92,7 +98,7 @@ event_register {variable MSDP_MANA} hmvchange hmvchange
 		#if {$hmv[current][$_hmv] != $hmv[old][$_hmv]} {
 			diaLog info HMV[$_hmv] old not HMV current;
 			#math hmv_change[$_hmv] $hmv[current][$_hmv] - $hmv[old][$_hmv];
-			#if {$hmv_change[$_hmv] != 0} {
+			#if {$hmv_change[$_hmv] != 0 && $hmv_change[$_hmv] <= $MSDP_HEALTH_MAX} {
 				diaLog info Change of $hmv_change[$_hmv] for $_hmv;
 				diaLog info {Value of hmv_line is "$hmv_delta_line"};
 				#format hmv_delta_line {%s%s:%s }
@@ -108,8 +114,49 @@ event_register {variable MSDP_MANA} hmvchange hmvchange
 		diaLog info showing hmv delt;
 		#format {hmv_delta_line} {<070>< %s>}
 		{$hmv_delta_line};
-		#echo $hmv_delta_line;
-	};
+		#echo $hmv_delta_line
+	}
+}
+
+#alias draw_hmv_bars {
+	#nop %0;
+	#math _hitpct @pct{$MSDP_HEALTH;$MSDP_HEALTH_MAX}/100.00;
+	#math _manpct @pct{$MSDP_MANA;$MSDP_MANA_MAX}/100.00;
+	#math _movpct @pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}/100.00;
+	#format {_line4} {hit  [%-18s<B373b41>] %-6s\nmana [%-18s<B373b41>] %-6s\nmove [%-18s<B373b41>] %-6s}
+	{@display_progress{$_hitpct;💗 $MSDP_HEALTH/$MSDP_HEALTH_MAX;18;health}}
+	{$hmv_change[last][hit]}
+	{@display_progress{$_manpct;🔮 $MSDP_MANA/$MSDP_MANA_MAX;18;mana}}
+	{$hmv_change[last][mana]}
+	{@display_progress{$_movpct;🚘 $MSDP_MOVEMENT/$MSDP_MOVEMENT_MAX;18;stam}}
+	{$hmv_change[last][move]};
+	#draw <B373b41> tile -4 $left_panel+1 -2 $map_left-2 $_line4
+}
+
+#alias generate_character_info {
+	#nop %0;
+	#format character_info {<Ff0d5a1>Character info:\nName: <Ffff>%s\n<Ff0d5a1>Class: <Ffff>%.3s <Ff0d5a1>Level: <Ffff>%.2s}
+	{$MSDP_CHARACTER_NAME}
+	{$MSDP_CLASS}
+	{$MSDP_LEVEL};
+	#if @is_alias{display_left_tiles} {display_left_tiles}
+}
+
+#alias init_char_info {
+	set_left_tile 1 <B5f819d> character_info 3 tile;
+	generate_character_info
+}
+
+init_char_info
+
+#function returnHMV {
+	#var _h @ansiStrip{%1};
+	#var _m @ansiStrip{%2};
+	#var _v @ansiStrip{%3};
+	#replace _h {H} {};
+	#replace _m {M} {};
+	#replace _v {V} {};
+	#return {h;m;v}
 }
 
 #class status close
