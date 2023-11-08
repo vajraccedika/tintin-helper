@@ -1,0 +1,30 @@
+#class cyborg kill
+#class cyborg open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/class/cyborg-description {Cyborg class utilities}
+#var nukefire/class/cyborg-help {
+	Aliases and skill definitions for Cyborg.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/class/cyborg-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/class/cyborg
+	} {
+		fail_module nukefire/class/cyborg unknown reason
+	}
+}
+
+
+
+#var skill[opener] kill
+#var skill[combat] pound
+
+#class cyborg close

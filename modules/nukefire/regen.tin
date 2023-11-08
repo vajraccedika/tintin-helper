@@ -1,0 +1,302 @@
+#class needRegen kill
+#class needRegen open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/regen-description {description}
+#var nukefire/regen-help {help file}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/regen-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/regen
+	} {
+		fail_module nukefire/regen unknown reason
+	}
+}
+
+#alias min {
+	#switch {"%1"} {
+		#case {""} {z_minmax_report min};
+		#case {"hms"} {
+			#if {"%2"!="" && "%3" != "" && "%4" != ""} {
+				#if { @isD{%2} && @isD{%3} && @isD{%4}} {
+					set_digit_value min HEALTH %2;
+					set_digit_value min MANA %3;
+					set_digit_value min MOVEMENT %4;
+					z_minmax_report min
+				} 
+			};
+			#else {
+				minmax_usage_display min
+			}
+		};
+		#case {"h"} {
+			#if {@isD{%2}} {
+				set_digit_value min HEALTH %2;
+				z_minmax_report min HEALTH
+			};
+			#else {
+				z_minmax_report min HEALTH
+			}
+		};
+		#case {"m"} {
+			#if {@isD{%2}} {
+				set_digit_value min MANA %2;
+				z_minmax_report min MANA;
+			};
+			#else {
+				z_minmax_report min MANA
+			}
+		};
+		#case {"s"} {
+			#if {@isD{%2}} {
+				set_digit_value min MOVEMENT %2;
+				z_minmax_report min MOVEMENT
+			};
+			#else {
+				z_minmax_report min MOVEMENT
+			}
+		};
+		#default {
+			minmax_usage_display min
+		}
+	}
+}
+
+#alias max {
+	#switch {"%1"} {
+		#case {""} {z_minmax_report max};
+		#case {"hms"} {
+			#if { @isD{%2} && @isD{%3} && @isD{%4}} {
+				set_digit_value max HEALTH %2;
+				set_digit_value max MANA %3;
+				set_digit_value max MOVEMENT %4;
+				z_minmax_report max
+			} {
+				minmax_usage_display max
+			}
+		};
+		#case {"h"} {
+			#if {@isD{%2}} {
+				set_digit_value max HEALTH %2;
+				z_minmax_report max HEALTH
+			};
+			#else {
+				z_minmax_report max HEALTH
+			}
+		};
+		#case {"m"} {
+			#if {@isD{%2}} {
+				set_digit_value max MANA %2;
+				z_minmax_report max MANA;
+			};
+			#else {
+					z_minmax_report min MANA
+			}
+		};
+		#case {"s"} {
+			#if {@isD{%2}} {
+				set_digit_value max MOVEMENT %2;
+				z_minmax_report max MOVEMENT
+			};
+			#else {
+				z_minmax_report max MOVEMENT
+			}
+		};
+		#default {
+			minmax_usage_display max
+		}
+	}
+}		
+
+#alias groupmin {
+	#switch {"%1"} {
+		#case {""} {z_minmax_report groupmin};
+		#case {"hms"} {
+			#if {"%2"!="" && "%3" != "" && "%4" != ""} {
+				#if { @isD{%2} && @isD{%3} && @isD{%4}} {
+					set_digit_value groupmin HEALTH %2;
+					set_digit_value groupmin MANA %3;
+					set_digit_value groupmin MOVEMENT %4;
+					z_minmax_report groupmin
+				} 
+			} ;
+			#else {
+				minmax_usage_display groupmin
+			}
+		};
+		#case {"h"} {
+			#if {@isD{%2}} {
+				set_digit_value groupmin HEALTH %2;
+				z_minmax_report groupmin HEALTH
+			};
+			#else {
+				z_minmax_report groupmin HEALTH
+			}
+		};
+		#case {"m"} {
+			#if {@isD{%2}} {
+				set_digit_value groupmin MANA %2;
+				z_minmax_report groupmin MANA;
+			};
+			#else {
+				z_minmax_report groupmin MANA
+			}
+		};
+		#case {"s"} {
+			#if {@isD{%2}} {
+				set_digit_value groupmin MOVEMENT %2;
+				z_minmax_report groupmin MOVEMENT
+			} ;
+			#else{
+				z_minmax_report groupmin MOVEMENT
+			}
+		};
+		#default {
+			minmax_usage_display groupmin
+		}
+	}
+}
+
+#alias groupmax {
+	#switch {"%1"} {
+		#case {""} {z_minmax_report groupmax};
+		#case {"hms"} {
+			#if { @isD{%2} && @isD{%3} && @isD{%4}} {
+				set_digit_value groupmax HEALTH %2;
+				set_digit_value groupmax MANA %3;
+				set_digit_value groupmax MOVEMENT %4;
+				z_minmax_report groupmax
+			};
+			#else {
+				minmax_usage_display groupmax
+			}
+		};
+		#case {"h"} {
+			#if {@isD{%2}} {
+				set_digit_value groupmax HEALTH %2;
+				z_minmax_report groupmax HEALTH
+			};
+			#else {
+				z_minmax_report groupmax HEALTH
+			}
+		};
+		#case {"m"} {
+			#if {@isD{%2}} {
+				set_digit_value groupmax MANA %2;
+				z_minmax_report groupmax MANA;
+			};
+			#else {
+					z_minmax_report groupmax MANA
+			}
+		};
+		#case {"s"} {
+			#if {@isD{%2}} {
+				set_digit_value groupmax MOVEMENT %2;
+				z_minmax_report groupmax MOVEMENT
+			};
+			#else {
+				z_minmax_report groupmax MOVEMENT
+			}
+		};
+		#default {
+			minmax_usage_display groupmax
+		}
+	}
+}	
+
+
+#alias set_digit_value {
+	#if {@isD{%3}} {
+		#var n_tmp @clamp{%3;0;100};
+		#var %1[%2] $n_tmp;
+	};
+	#else {
+		uinfo zone Please enter a digit between `1-100`.
+	}
+}
+
+#alias minmax_usage_display {
+	uinfo zone Usage: %1 <`h`/`m`/`s`> <`1-100`>, or %1 hms <`1-100`> <`1-100`> <`1-100`>.
+}
+
+#nop -- pass: %1 (min/max)
+#alias z_minmax_report {
+	#var mm_rep_line {};
+	#switch {"%2"} {
+		#case {""} {
+			#format mm_rep_line {%n hms values: %+6-6s %+6-3s %+6s} {%1} {`$%1[HEALTH]`H} {`$%1[MANA]`M} {`$%1[MOVEMENT]`S};
+			uinfo zone $mm_rep_line
+		};
+		#default {
+			#format mm_rep_line {%n} {%1 value for @lcFirstLetter{%2} set to `$%1[%2]`.};
+			uinfo zone $mm_rep_line
+		}
+	}
+}
+
+#alias do_regen_leader {
+	#var leader_regen 1;
+	#untick next_decision;
+	$regenMode;
+	#ticker {check_hms_high} {
+		#if {@completeRegen{}} {
+			#untick {check_hms_high};
+			#var leader_regen 0;
+			stand;
+			look;
+			event_raise regenComplete;
+			#if {$mount!=""} {
+				mount @getKeyword{$mount};
+			};
+		};
+	} {1}
+}
+
+#function lcFirstLetter {
+	#format _first_let {%.1l} {%1};
+	#return $_first_let
+}
+
+#function needRegen {
+	#foreach *min[] nr {
+		#if {@pct{$MSDP_$nr;$MSDP_${nr}_MAX}<$min[$nr]} {
+			#return 1
+		}
+	};
+	#return 0
+}
+
+#function completeRegen {
+	#var com_reg 0;
+	#foreach *max[] cr {
+		#if {@pct{$MSDP_$cr;$MSDP_${cr}_MAX}>$max[$cr]} {
+			#math com_reg $com_reg+1
+		}
+	};
+	#if {$com_reg==3} {
+		#return 1
+	};
+	#else {
+		#return 0
+	}
+}
+
+#foreach {HEALTH;MANA;MOVEMENT} def {
+	init min[$def] zonerunner 1;
+	init max[$def] zonerunner 100;
+	init groupmin[$def] zonerunner 1;
+	init groupmax[$def] zonerunner 100
+}
+
+z_minmax_report min
+z_minmax_report max
+
+
+#class needRegen close

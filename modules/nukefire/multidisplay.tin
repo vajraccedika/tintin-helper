@@ -1,0 +1,74 @@
+#class multidisplay kill
+#class multidisplay open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/multidisplay-description {Manages multi char info display in HUD}
+#var nukefire/multidisplay-help {
+	Displays group HMV info in right panel, if right\n
+	panel layout is loaded.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/multidisplay-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/multidisplay
+	} {
+		fail_module nukefire/multidisplay unknown reason
+	}
+}
+
+
+
+#nop --
+#nop Events
+#nop --
+
+event_register {variable MSDP_HEALTH} multidisplay {generate_group_info}
+event_register {variable MSDP_MANA} multidisplay {generate_group_info}
+event_register {variable MSDP_MOVEMENT} multidisplay {generate_group_info}
+event_register prompt multidisplay {generate_group_info}
+
+#nop set right tile for group display
+set_right_tile 2 <B85678f> group_info[%*] 10 tile
+
+#nop --
+#nop Alias
+#nop --
+
+#alias generate_group_info {
+	#nop %0;
+	#if {&{MSDP_CHARACTER_NAME}} {
+		#info sessions save;
+		#format _disp_line {%-9s - %.3s [%+2s] %+3s<Ffff>H %+3s<Ffff>M %+3s<Ffff>V}
+		{@activeSession{$MSDP_CHARACTER_NAME}}
+		{$MSDP_CLASS}
+		{$MSDP_LEVEL}
+		{@colorPct{@int{@pct{$MSDP_HEALTH;$MSDP_HEALTH_MAX}}}}
+		{@colorPct{@int{@pct{$MSDP_MANA;$MSDP_MANA_MAX}}}}
+		{@colorPct{@int{@pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}}}};
+		#foreach {*info[SESSIONS][%*]} {_ses} {
+			#if {"$info[SESSIONS][$_ses][IP]" == "3.21.246.34"} {
+				#${_ses} #var group_info[$MSDP_CHARACTER_NAME] $_disp_line
+			}
+		};
+		#if {@is_alias{display_right_tiles}} {display_right_tiles}
+	}
+}
+
+#function activeSession {
+	#info session save;
+
+	#if {$info[SESSION][ACTIVE] == 1} {
+		#return <188>%1<288>
+	} {
+		#return %1
+	}
+}
+
+#class multidisplay close

@@ -1,0 +1,145 @@
+#class reroll kill
+#class reroll open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/reroll-description {reroll management for Nukefire}
+#var nukefire/reroll-help {TBA}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/reroll-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/reroll
+	} {
+		fail_module nukefire/reroll unknown reason
+	}
+}
+
+#nop --
+#nop Script
+#nop --
+
+#var rolls 0
+#var roll_cost 250
+
+#nop -- set your stat mins here
+#nop -- currently rolling a goliath cyborg
+#var min[str] 18
+#var min[str_bonus] 0
+#var min[int] 12
+#var min[wis] 12
+#var min[dex] 15
+#var min[con] 4
+#var min[cha] 4
+
+#list stats create str str_bonus int wis dex con cha
+
+init toggle[reroll] preferences off
+
+#action {^New stats: Str %d/%d, Int %d, Wis %d, Dex %d, Con %d, Cha %d$} {
+	#var roll_sum 0;
+	#var roll_success 0;
+	#var reroll_line {};
+	#math rolls $rolls + 1;
+	#var roll[str] %1;
+	#var roll[str_bonus] %2;
+	#var roll[int] %3;
+	#var roll[wis] %4;
+	#var roll[dex] %5;
+	#var roll[con] %6;
+	#var roll[cha] %7;
+	#foreach {$stats[%*]} {_st} {
+		#if {"$_st" == "str_bonus"} {
+			#nop
+		};
+		#else {
+			#math roll_sum $roll_sum + $roll[$_st]
+		}
+	};
+	uinfo data Total stats: `$roll_sum` with str_bonus `$roll[str_bonus]`;
+	#var rolls_list[$rolls] $roll;
+	#foreach {$stats[%*]} {_st} {
+		#if { &{max_stat[$_st]} == 0 } {
+			#var max_stat[$_st] $roll[$_st]
+		};
+		#if { &{min_stat[$_st]} == 0 } {
+			#var min_stat[$_st] $roll[$_st]
+		};
+		#if {$roll[$_st] > $max_stat[$_st]} {
+			#var max_stat[$_st] $roll[$_st];
+			uinfo data New max for `$_st`: `$roll[$_st]`
+		};
+		#if {$roll[$_st] < $min_stat[$_st]} {
+			#var min_stat[$_st] $roll[$_st];
+			uinfo data New min for `$_st`: `$roll[$_st]`
+		};
+		#if {$roll[$_st] >= $min[$_st]} {
+			#math roll_success $roll_success + 1;
+			#format tmp_statline {%n: `%+2s` }
+			{$_st}
+			{$roll[$_st]}
+		};
+		#else {
+			#format tmp_statline {%n: %+2s }
+			{$_st}
+			{$roll[$_st]}
+		};
+		#format reroll_line {%s%s}
+		{$reroll_line}
+		{$tmp_statline}
+	};
+	uinfo data Stats for roll `$rolls`: $reroll_line;
+	#if {$roll_success == &{stats[]}} {
+		uinfo data All stats rolled successfully!
+	};
+	#elseif {"$toggle[reroll]" == "on" && $rolls < $max_rolls} {
+		#if {$MSDP_MONEY >= $roll_cost} {
+			buy
+		} {
+			uinfo data Need $roll_cost credits to reroll.
+		}
+	}
+}
+
+#alias reroll {
+	#var rolls 0;
+	#var max_rolls %1;
+	#if {$MSDP_MONEY >= $roll_cost} {
+		buy
+	} {
+		uinfo data Need $roll_cost credits to reroll.
+	}
+}
+
+#alias reroll_report {
+	#var max_line {};
+	#var min_line {};
+	#var target_line {};
+	#foreach {$stats[%*]} {_st} {
+		#format {max_line} {%s%n: `%+2s` }
+		{$max_line}
+		{$_st}
+		{$max_stat[$_st]};
+		#format {min_line} {%s%n: `%+2s` }
+		{$min_line}
+		{$_st}
+		{$min_stat[$_st]};
+		#format {target_line} {%s%n: `%+2s` }
+		{$target_line}
+		{$_st}
+		{$min[$_st]}
+	};
+	#math tot_cost $rolls * $roll_cost;
+	uinfo data Rolled a total of `$rolls` times at a cost of `$tot_cost`;
+	uinfo data Target stats:     $target_line;
+	uinfo data Max stats rolled: $max_line;
+	uinfo data Min stats rolled: $min_line;
+	uinfo data Last roll:        $reroll_line
+}
+
+#class reroll close
