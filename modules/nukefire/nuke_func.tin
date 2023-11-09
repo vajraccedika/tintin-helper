@@ -258,17 +258,17 @@
 
 #function hmvDelta {
 	#if {%1 < 0} {
-		#return {<110> %1<070>}
+		#return {<110> %1<288><070>}
 	} {
-		#return {<120> +%1<070>}
+		#return {<120> +%1<288><070>}
 	}
 }
 
 #function hmvChange {
 	#if {%1 < 0} {
-		#return {<B373b41><Fff3300><188>%1<Ffff>}
+		#return {<B373b41><Fff3300><188>%1<288><Ffff>}
 	} {
-		#return {<B373b41><F33cc33><188>+%1<Ffff>}
+		#return {<B373b41><F33cc33><188>+%1<288><Ffff>}
 	}
 }
 

@@ -61,6 +61,49 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 	}
 }
 
+#alias generate_msdp_group {
+	#var msdp_idx &{MSDP_GROUP[]};
+	#math mg[health] @int{@pct{$MSDP_HEALTH;$MSDP_HEALTH_MAX}};
+	#math mg[mana] @int{@pct{$MSDP_MANA;$MSDP_MANA_MAX}};
+	#math mg[movement] @int{@pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}};
+	#var mg[position] $MSDP_POSITION;
+	#var mg[room] $MSDP_ROOM_VNUM;
+	#var mg[level] $MSDP_LEVEL;
+	#var mg[name] $MSDP_CHARACTER_NAME;
+	#var _ses @validSessions{};
+	#var mg_index @getMGindex{$MSDP_CHARACTER_NAME};
+	#if {$mg_index > 0} {
+		#foreach {$_ses[%*]} {_s} {
+			#$_s #var MSDP_GROUP[$mg_index] {${mg}}
+		}
+	} {
+		#math new_mg_idx $msdp_idx + 1;
+		#foreach {$_ses[%*]} {_s} {
+			#$_s #var MSDP_GROUP[$new_mg_idx] {${mg}}
+		}
+	}
+}
+
+#function validSessions {
+	#info sessions save;
+	#list valid_sessions clear;
+	#foreach {*info[SESSIONS][%*]} {_ses} {
+		#if {"$info[SESSIONS][$_ses][IP]" == "3.21.246.34"} {
+			#list valid_sessions add $_ses
+		}
+	};
+	#return $valid_sessions
+}
+
+#function getMGindex {
+	#foreach {*MSDP_GROUP[%*]} {_mg} {
+		#if {"$MSDP_GROUP[$_mg][name]" == "%1"} {
+			#return $_mg
+		}
+	};
+	#return 0
+}
+
 #function activeSession {
 	#info session save;
 

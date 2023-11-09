@@ -44,6 +44,7 @@ event_register endRoomLook room_clear {do_room_clear}
 event_register endRoomLook room_hash {do_room_hash}
 event_register endRoomLook generate_room_info {generate_room_info}
 event_register recall map {clear_exits}
+event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 #nop event_register mapEnterRoom map {map_room}
 
 #nop -- This is a bad room that doesn't trigger room entry
@@ -116,6 +117,10 @@ event_register recall map {clear_exits}
 #nop --
 #nop Aliases
 #nop --
+
+#alias disp_msdp_room {
+	#nop %0;
+}
 
 #nop -- generate formatted line for room info block
 #alias generate_room_info {

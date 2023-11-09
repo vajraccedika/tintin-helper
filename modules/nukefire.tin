@@ -65,24 +65,30 @@
 }
 
 #action {^            What's your name, freejack?} {
+	#nop #line oneshot #tick {name} {#send ${char_name}} {1};
 	#line oneshot #tick {name} {#send ${char_name}} {0.5};
-	#nop #class player read {$players/${char_name}_nukefire.player}
+	#class player read {$players/${char_name}_nukefire.player}
 }
 
 #action {^Name:} {
 	#if {"$menu_option" == "login"} {
 		#send ${char_name};
-		#nop #class player read {$players/${char_name}_nukefire.player}
+		#class player read {$players/${char_name}_nukefire.player}
 	}
 } {9}
 
 #action {^Password:} {
-	#if { &{char_password} } {#echo {<cfa>Password loaded.}};
-	#send ${char_password};
+	#echo {<cfa>char_password = $char_password};
+	#if { &{char_password} } {
+		#echo {<cfa>Password loaded.};
+		#send ${char_password};
+	} {
+		#echo {<cfa>Password not loaded.}
+	};
 	#if {"${account_dont_forget_password}" != "true"} {
 		#showme <fcc>Forgetting password.;
-		#unvar char_password;
-	};
+		#line oneshot #tick passw {#unvar char_password} {1}
+	}
 }
 
 #action {^*** PRESS RETURN:} {#cr}
@@ -118,8 +124,6 @@ event_register {variable MSDP_GROUP} {right} {generate_group_info {%0} {%1} {%2}
     #var area_info {${MSDP_AREA_NAME}\nLevel: $MSDP_AREA_MINLEVEL - $MSDP_AREA_MAXLEVEL};
     #if {@is_alias{display_right_tiles}} {display_right_tiles}
 }
-
-#tick {idle} {#cr} {135}
 
 #nop -- kill triggers here
 #action {^%1's pitiful death cry assaults your ears!$} {

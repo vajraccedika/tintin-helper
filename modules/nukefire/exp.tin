@@ -78,7 +78,7 @@ event_register {variable MSDP_EXPERIENCE} exp_info {generate_exp_info}
 
 #alias update_tnl {
   #nop %0;
-  #local _raw_prompt %0;
+  #local {_raw_prompt} {%0};
   #replace _raw_prompt {<} {};
   #replace _raw_prompt {>} {};
   #replace _raw_prompt {(} {};
@@ -122,6 +122,7 @@ event_register {variable MSDP_EXPERIENCE} exp_info {generate_exp_info}
 
 #alias init_exp_info {
   set_left_tile 2 <B5f819d> exp_info 2 tile;
+  exp_counter;
   generate_exp_info
 }
 
