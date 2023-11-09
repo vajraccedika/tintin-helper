@@ -3,6 +3,10 @@ This is a readme just for the nukefire module of tintin-helper.
 First, read the tintin-helper readme as it explains the basic concepts
 and setup. Then come back and read this one.
 
+Starting up:
+Use the following command to start:
+>tt++ nuke.tin
+
 Player files:
 You do not need an account file for nukefire. Just a player file.
 Your player file should look something like this:
