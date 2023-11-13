@@ -29,10 +29,26 @@
 #nop Events
 #nop --
 
-event_register {variable MSDP_HEALTH} multidisplay {generate_group_info}
-event_register {variable MSDP_MANA} multidisplay {generate_group_info}
-event_register {variable MSDP_MOVEMENT} multidisplay {generate_group_info}
-event_register prompt multidisplay {generate_group_info}
+#event {VARIABLE UPDATED MSDP_GROUP} {event_raise {variable MSDP_GROUP}}
+#event {SESSION DEACTIVATED} {event_raise {SESSION DEACTIVATED} {%0}}
+
+#nop event_register {variable MSDP_HEALTH} multidisplay {generate_group_info}
+#nop event_register {variable MSDP_MANA} multidisplay {generate_group_info}
+#nop event_register {variable MSDP_MOVEMENT} multidisplay {generate_group_info}
+#nop event_register prompt multidisplay {generate_group_info}
+
+#nop {
+	event_register {variable MSDP_HEALTH} msdp_group {generate_msdp_group}
+	event_register {variable MSDP_MANA} msdp_group {generate_msdp_group}
+	event_register {variable MSDP_MOVEMENT} msdp_group {generate_msdp_group}
+}	
+event_register prompt msdp_group {generate_msdp_group}
+
+event_register player_death clear_group_info {clear_group_info}
+event_register player_death clear_msdp_group {clear_msdp_group}
+
+event_register {SESSION ACTIVATED} multidisplay {set_active_session %2}
+event_register {SESSION DEACTIVATED} multidisplay {set_inactive_session %2}
 
 #nop set right tile for group display
 set_right_tile 2 <B85678f> group_info[%*] 10 tile
@@ -41,48 +57,102 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 #nop Alias
 #nop --
 
+#alias set_active_session {
+	#nop %0;
+	#all #show {<cfa>Ses "%0" activated}
+}
+
+#alias set_inactive_session {
+	#nop %0;
+	#all #show {<cfa>Ses "%0" deactivated};
+	#var act_ses[$MSDP_CHARACTER_NAME] 0
+}
+
+#alias #all {
+	#nukefire:img {%0};
+	#nukefire:goliath {%0};
+	#nukefire:denul {%0};
+	#nukefire:anatta {%0} 
+}
+
 #alias generate_group_info {
 	#nop %0;
+	diaLog info Generate group_info called by %1;
 	#if {&{MSDP_CHARACTER_NAME}} {
-		#info sessions save;
-		#format _disp_line {%-9s - %.3s [%+2s] %+3s<Ffff>H %+3s<Ffff>M %+3s<Ffff>V}
-		{@activeSession{$MSDP_CHARACTER_NAME}}
-		{$MSDP_CLASS}
-		{$MSDP_LEVEL}
-		{@colorPct{@int{@pct{$MSDP_HEALTH;$MSDP_HEALTH_MAX}}}}
-		{@colorPct{@int{@pct{$MSDP_MANA;$MSDP_MANA_MAX}}}}
-		{@colorPct{@int{@pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}}}};
-		#foreach {*info[SESSIONS][%*]} {_ses} {
-			#if {"$info[SESSIONS][$_ses][IP]" == "3.21.246.34"} {
-				#${_ses} #var group_info[$MSDP_CHARACTER_NAME] $_disp_line
-			}
+		#list group_info create {<Ffff>Connected characters:};
+		#foreach {*MSDP_GROUP[%*]} {_ginf} {
+			#format _disp_line {%-9s - %.3s [%+2s] %+3s<Ffff>H %+3s<Ffff>M %+3s<Ffff>V [%.8s]}
+			{@disp_name_color{$MSDP_GROUP[$_ginf][name]}}
+			{$MSDP_GROUP[$_ginf][class]}
+			{$MSDP_GROUP[$_ginf][level]}
+			{@colorPct{$MSDP_GROUP[$_ginf][health]}}
+			{@colorPct{$MSDP_GROUP[$_ginf][mana]}}
+			{@colorPct{$MSDP_GROUP[$_ginf][movement]}}
+			{$MSDP_GROUP[$_ginf][position]};
+			#list group_info add {{$_disp_line}}
 		};
 		#if {@is_alias{display_right_tiles}} {display_right_tiles}
 	}
 }
 
+
 #alias generate_msdp_group {
-	#var msdp_idx &{MSDP_GROUP[]};
-	#math mg[health] @int{@pct{$MSDP_HEALTH;$MSDP_HEALTH_MAX}};
-	#math mg[mana] @int{@pct{$MSDP_MANA;$MSDP_MANA_MAX}};
-	#math mg[movement] @int{@pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}};
-	#var mg[position] $MSDP_POSITION;
-	#var mg[room] $MSDP_ROOM_VNUM;
-	#var mg[level] $MSDP_LEVEL;
-	#var mg[name] $MSDP_CHARACTER_NAME;
-	#var _ses @validSessions{};
-	#var mg_index @getMGindex{$MSDP_CHARACTER_NAME};
-	#if {$mg_index > 0} {
-		#foreach {$_ses[%*]} {_s} {
-			#$_s #var MSDP_GROUP[$mg_index] {${mg}}
-		}
-	} {
-		#math new_mg_idx $msdp_idx + 1;
-		#foreach {$_ses[%*]} {_s} {
-			#$_s #var MSDP_GROUP[$new_mg_idx] {${mg}}
+	#nop %0;
+	diaLog info Generating MSDP_GROUP, called by %1;
+	#if {&{MSDP_CHARACTER_NAME}} {
+		#var msdp_idx &{MSDP_GROUP[]};
+		#math mg[health] @int{@pct{$MSDP_HEALTH;$MSDP_HEALTH_MAX}};
+		#math mg[mana] @int{@pct{$MSDP_MANA;$MSDP_MANA_MAX}};
+		#math mg[movement] @int{@pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}};
+		#var mg[position] $MSDP_POSITION;
+		#var mg[roomhash] $new_room_hash;
+		#var mg[room] $MSDP_ROOM_VNUM;
+		#var mg[level] $MSDP_LEVEL;
+		#var mg[name] $MSDP_CHARACTER_NAME;
+		#var mg_index @getMGindex{$MSDP_CHARACTER_NAME};
+		#if {$mg_index > 0} {
+			#all #var MSDP_GROUP[$mg_index] {${mg}};
+			#nop #foreach {$valid_sessions[%*]} {_s} {
+				#$_s #var MSDP_GROUP[$mg_index] {${mg}}
+			}
+		} {
+			#math new_mg_idx $msdp_idx + 1;
+			#all #var MSDP_GROUP[$new_mg_idx] {${mg}};
+			#nop #foreach {$valid_sessions[%*]} {_s} {
+				#$_s #var MSDP_GROUP[$new_mg_idx] {${mg}}
+			}
 		}
 	}
 }
+
+#alias clear_msdp_group {
+	#nop %0;
+	#var _ses @validSessions{};
+	#foreach {$_ses[%*]} {_s} {
+		#$_s #unvar MSDP_GROUP[$mg_index] {${mg}}
+	}
+}
+
+#alias clear_group_info {
+	#nop %0;
+	#var _ses @validSessions{};
+	#foreach {$_ses[%*]} {_s} {
+		#${_s} #unvar group_info[$MSDP_CHARACTER_NAME]
+	}
+}
+
+#alias register_session {
+	#var valid_sessions @validSessions{};
+	#foreach {$valid_sessions[%*]} {_ses} {
+		#${_ses} {#var valid_sessions {${valid_sessions}}};
+		#var mg_index @getMGindex{$MSDP_CHARACTER_NAME}
+	}
+}
+
+
+#nop --
+#nop Functions
+#nop --
 
 #function validSessions {
 	#info sessions save;
@@ -104,14 +174,19 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 	#return 0
 }
 
-#function activeSession {
-	#info session save;
-
-	#if {$info[SESSION][ACTIVE] == 1} {
-		#return <188>%1<288>
-	} {
-		#return %1
-	}
+#function disp_name_color {
+	#var _col <288>;
+	diaLog info received arg:%1;
+	#if {$act_ses == 1} {
+		diaLog info Session is active;
+		#var _col <188>
+	};
+	#elseif {$MSDP_GROUP[%1][roomhash] != $MSDP_GROUP[$mg_index][roomhash]} {
+		#var _col <f00c>
+	};
+	#return {${_col}%1}
 }
+
+register_session
 
 #class multidisplay close

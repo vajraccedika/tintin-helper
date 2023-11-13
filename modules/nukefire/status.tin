@@ -35,25 +35,15 @@ event_register {variable MSDP_MANA} hmvchange hmvchange
 event_register {variable MSDP_LEVEL} status generate_character_info
 event_register {variable MSDP_EXPERIENCE} status generate_character_info
 
-#var prompt_regexp {< [0-9]+H [0-9]+M [0-9]+V\s?(\(news\))?\s?(\(motd\))?\s?(\(\d+\))?\s?>}
+#var prompt_regexp {^< [0-9]+H [0-9]+M [0-9]+V\s?(\(news\))?\s?(\(motd\))?\s?(\(\d+\))?\s?>}
 
 #nop --
 #nop Actions
 #nop --
 
-#action {^[%1] - %2 %s %d/%d$} {
-	#var hmv[current][%2] %4;
-	#var hmv[max][%2] %5
-}
-
-#action {^[ Level: $s%d ] [ Class: %s%w ] [ Age: %s%3 ]$} {
-	#var level %2;
-	#var class %4
-}
-
-#action {^Name: %w %2} {
-	#var name %1
-} {4}
+#action {~\e[0m< \e[0;36m%d\e[0mH \e[0;33m%d\e[0mM \e[0;32m%d\e[0mV >} {
+	#nop
+} {5}
 
 #alias hmvchange {
 	#nop %0;
@@ -124,11 +114,11 @@ event_register {variable MSDP_EXPERIENCE} status generate_character_info
 	#math _manpct @pct{$MSDP_MANA;$MSDP_MANA_MAX}/100.00;
 	#math _movpct @pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}/100.00;
 	#format {_line4} {hit  [%-18s<B373b41>] %-6s\nmana [%-18s<B373b41>] %-6s\nmove [%-18s<B373b41>] %-6s}
-	{@display_progress{$_hitpct;💗 $MSDP_HEALTH/$MSDP_HEALTH_MAX;18;health}}
+	{@display_progress{@clamp{$_hitpct;0;1};💗 $MSDP_HEALTH/$MSDP_HEALTH_MAX;18;health}}
 	{$hmv_change[last][hit]}
-	{@display_progress{$_manpct;🔮 $MSDP_MANA/$MSDP_MANA_MAX;18;mana}}
+	{@display_progress{@clamp{$_manpct;0;1};🔮 $MSDP_MANA/$MSDP_MANA_MAX;18;mana}}
 	{$hmv_change[last][mana]}
-	{@display_progress{$_movpct;🚘 $MSDP_MOVEMENT/$MSDP_MOVEMENT_MAX;18;stam}}
+	{@display_progress{@clamp{$_movpct;0;1};🚘 $MSDP_MOVEMENT/$MSDP_MOVEMENT_MAX;18;stam}}
 	{$hmv_change[last][move]};
 	#draw <B373b41> tile -4 $left_panel+1 -2 $map_left-2 $_line4
 }

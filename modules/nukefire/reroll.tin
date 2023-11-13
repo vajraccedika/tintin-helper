@@ -31,9 +31,9 @@
 #nop -- currently rolling a goliath cyborg
 #var min[str] 18
 #var min[str_bonus] 0
-#var min[int] 12
-#var min[wis] 12
-#var min[dex] 15
+#var min[int] 4
+#var min[wis] 4
+#var min[dex] 18
 #var min[con] 4
 #var min[cha] 4
 

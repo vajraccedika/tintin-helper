@@ -96,9 +96,11 @@
 	#nop -- depreciated, no longer using old tin version on disdain;
 	#nop -- this is vm version line #list {token_line} {simplify} {output_line};
 	#nop #list {token_line} {simplify} {output_line};
+	#replace output_line {;;;} {@};
 	#replace output_line {;} {};
+	#replace output_line {@} {\;};
 	#replace output_line {%} {%%%};
-	#return $output_line
+	#return {$output_line}
 }
 
 #class {info} {close}

@@ -57,9 +57,20 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 #nop Actions
 #nop --
 
-#action {~\e[0;36m%1 - \e[0;36m[%2] [%3]\e[0m\e[0m} {
+#nop {\e[0m1352\e[0mH \e[0;33m900\e[0mM \e[0;32m838\e[0mV > \e[0;36mThe Temple Ruins\e[0m}
+
+#action {~> \e[0;36m%1 - \e[0;36m[%2] [%3]\e[0m\e[0m} {
 	event_raise roomLook {%1} {%2} {%3};
 	diaLog map Looking at room
+} {4}
+
+#action {~^\e[0;36m%1 - \e[0;36m[%2] [%3]\e[0m\e[0m} {
+	event_raise roomLook {%1} {%2} {%3};
+	diaLog map Looking at room
+}
+
+#action {~^\e[0;34m%1\e[0m} {
+	#nop
 }
 
 #action {Obvious exits:$} {
@@ -76,7 +87,7 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 	}
 } {4}
 
-#action {{.*}} {
+#action {{^.*$}} {
 	#if {$room[looking]==1} {
 		diaLog map roomcap:"%0";
 		#format room[desc] {%s%s}
@@ -128,11 +139,13 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 	#var _ex_line {};
 	#foreach {North;East;South;West;Up;Down} {_x} {
 		#if {&{room[exits][$_x]}} {
+			diaLog map Exit for $_x exists;
 			#format _ex_line {%s<Ff0d5a1>%.1s : <Ffcfcfc>%s\n}
 		{$_ex_line}
 		{$_x}
 		{@formatExit{$room[exits][$_x];7;newline}}
-		}
+		};
+		diaLog map exit line="$_ex_line";
 	};
 	#format _room_line {<Ff0d5a1>Location info\nRoom  : <Ffff>%+12s\n<Ff0d5a1>Sector: <Ffcfcfc>%s\n<Ff0d5a1>%s\n%s}
 	{@formatExit{$room[name];10;tab}}
@@ -185,8 +198,13 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 #alias do_room_hash {
 	diaLog map room hash called;
 	#nop %0;
-	#unvar room[time];
-	#format new_room_hash {%H} $room;
+	#var room_data $room;
+	#unvar room_data[time];
+	#unvar room_data[looking];
+	#foreach {*room_data[exits][%*]} {_rde} {
+		#var room_data[exits][$_rde] {}
+	};
+	#format new_room_hash {%H} $room_data;
 	#if {$new_room_hash == $old_room_hash} {
 		diaLog map Looking at same room
 	};
@@ -217,7 +235,7 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 		#case {"East"} {#return e};
 		#case {"West"} {#return w};
 		#case {"Up"} {#return u};
-		#case {Down} {#return d}
+		#case {"Down"} {#return d}
 	}
 }
 
@@ -230,9 +248,9 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 	#list _tmp_line clear;
 	#nop takes arg: exit room name;
 	#math limit $left_panel - %2;
-	#math _max_l $limit * 2 - 4;
+	#math _max_l ($limit * 2) - 5;
 	#if {@len{%1} >= $limit} {
-		#list _tmp_line explode {%1};
+		#list _tmp_line tokenize {%1};
 		#loop {1} {$limit} {_tl} {
 			#if {"$_tmp_line[$_tl]"==" "} {
 				#var last_space $_tl;
@@ -242,10 +260,12 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 			#list _tmp_line set $last_space {$_char[%3]};
 			#list _tmp_line collapse;
 			#format _tmp_line {%.${_max_l}s} {$_tmp_line};
+			diaLog map return="$_tmp_line";
 			#return {<Ffcfcfc>$_tmp_line}
 		}
 	};
 	#else {
+		diaLog map return="%1";
 		#return %1
 	}
 }

@@ -27,6 +27,7 @@
 event_register {variable MSDP_OPPONENT_NAME} position {opponent_pos {%2} {%3}}
 event_register updatePosition position {update_position %2}
 event_register {variable position} position {update_msdp_pos %2}
+event_register mob_kill position {update_position standing}
 
 #event {VARIABLE UPDATED position[current]} {
 	event_raise {variable position} %1
@@ -85,6 +86,22 @@ event_register {variable position} position {update_msdp_pos %2}
 
 #action {^You sit down and rest your tired bones.$} {
 	event_raise updatePosition resting
+}
+
+#action {^You lift off the ground and start hovering.$} {
+	event_raise updatePosition hovering
+}
+
+#action {^You stop floating around and sit down.$} {
+	event_raise updatePosition sitting
+}
+
+#action {^You stop floating around and go to sleep.$} {
+	event_raise updatePosition sleeping
+}
+
+#action {^You float down and put your feet on the ground.$} {
+	event_raise updatePosition standing
 }
 
 #alias opponent_pos {

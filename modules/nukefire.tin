@@ -55,9 +55,8 @@
 	#foreach {$modules_on_connect[%*]} {module} {
 			load_module $module
 	};
-
 	info nukefire Loading nukefire modules;
-	#foreach {position;combat;diag;nuke_func;inventory;mobs;track;combat;map;money;status;exp;multidisplay} tmp {
+	#foreach {diag;position;combat;map;nuke_func;inventory;mobs;track;money;status;exp;multidisplay} tmp {
 		load_module nukefire/$tmp
 	};
 	#line oneshot #tick {clear} {#buffer end} {0.5};
@@ -78,7 +77,6 @@
 } {9}
 
 #action {^Password:} {
-	#echo {<cfa>char_password = $char_password};
 	#if { &{char_password} } {
 		#echo {<cfa>Password loaded.};
 		#send ${char_password};
@@ -148,7 +146,7 @@ event_register {variable MSDP_GROUP} {right} {generate_group_info {%0} {%1} {%2}
 	}
 }
 
-#action {^An ember ant says, 'AARRRGGH!!'$} {
+#action {^%1 says, 'AARRRGGH!!'$} {
 	#buffer get _expline -1;
 	#format {%n} _dead_mob %1;
 	#regexp {$_expline} {You receive %d experience points.} {
@@ -156,6 +154,10 @@ event_register {variable MSDP_GROUP} {right} {generate_group_info {%0} {%1} {%2}
 	} {
 		event_raise {mob_kill} {$_dead_mob} {0}
 	}
+}
+
+#action {^You are dead!  Sorry...$} {
+	event_raise player_death
 }
 
 #nop -- we will use tt event prompt for this
@@ -173,6 +175,9 @@ event_register {variable MSDP_GROUP} {right} {generate_group_info {%0} {%1} {%2}
 #config log plain
 #config speedwalk on
 
-#action {^{[a-zA-Z ]+} has arrived} {event_raise {entity arrival} {%1}}
+#action {^%1 has arrived.$} {event_raise {entity_arrival} {%1}}
+#action {> %1 has arrived.$} {event_raise {entity_arrival} {%1}}
+#action {^%1 leaves %w.$} {event_raise {entity_departure} {%1} {%2}}
+#action {> %1 leaves %w.$} {event_raise {entity_departure} {%1} {%2}}
 
 #nop vim: syntax=tt

@@ -1,11 +1,5 @@
 #class inventory kill
 #class inventory open
-#nop { items in room
-	\e[0;32m(10) \e[0;32mA few credits is lying here.
-	\e[0m\e[0;32m(11) \e[0;32mOne miserable credit is lying here.
-	\e[0m\e[0;32m\e[0;32mAn ATM machine is here.
-	\e[0m\e[0;32m\e[0;32mA large bulletin board covered with classified ads takes up a whole wall.
-}
 
 #nop --
 #nop Class Definitions
@@ -31,11 +25,11 @@
 event_register roomContents update_contents {update_contents %2 {%3}}
 event_register roomLook clear_contents {clear_contents}
 
-#action {~^\e[0;32m({(\s?\d+)}) \e[0;32m%3.$} {
+#action {~^\e[0;32m({(\s?\d+)}) \e[0;32m%3$} {
 	event_raise roomContents %1 {%3}
 }
 
-#action {~^\e[0m\e[0;32m({(\s?\d+)}) \e[0;32m%3.$} {
+#action {~^\e[0m\e[0;32m({(\s?\d+)}) \e[0;32m%3$} {
 	event_raise roomContents %1 {%3}
 }
 
@@ -46,6 +40,34 @@ event_register roomLook clear_contents {clear_contents}
 #action {~^\e[0m\e[0;32m\e[0;32m%1$} {
 	event_raise roomContents 1 {%1}
 }
+
+#action {^You give %1 to %2.$} {
+	#nop track-item give %1 %2
+}
+
+#action {^You get %1 from %2.$} {
+	#nop track-item get %1 from %2
+}
+
+#action {^You drop %1.$} {
+	#nop track-item drop %1 at room[name]/room[msdp][room-vnum]
+}
+
+#action {^You get %1.$} {
+	#nop track-item get %1 at room[name]/room[msdp-room-vnum]
+}
+
+#action {^%1 {(used)|(carried)|(here)}:$} {
+	#nop capture_contents %1 %2
+}
+
+#action {^You put %1 in %2.$} {
+	#nop track-item put %1 %2
+}
+
+#nop --
+#nop Alias
+#nop --
 
 #alias update_contents {
 	#nop %0;

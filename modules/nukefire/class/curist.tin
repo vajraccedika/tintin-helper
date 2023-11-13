@@ -1,0 +1,98 @@
+#class curist kill
+#class curist open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/class/curist-description {Curist class utilities}
+#var nukefire/class/curist-help {
+	Aliases and skill definitions for Curist.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/class/curist-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/class/curist
+	} {
+		fail_module nukefire/class/curist unknown reason
+	}
+}
+#alias heal {
+	sling 'heal' %1
+}
+
+#alias invig {
+	sling 'invig' %1
+}
+
+#alias rejuv {
+	sling 'rejuv' %1
+}
+
+#alias blind {
+	sling 'blind' %1
+}
+
+#alias wor {
+	sling 'word of recall' %1
+}
+
+#alias id {
+	sling 'identify' %1
+}
+
+#alias quake {
+	sling 'earthquake' %1
+}
+
+#alias dispelevil {
+	sling 'dispel evil' %1
+}
+
+#alias dispelgood {
+	sling 'dispel good' %1
+}
+
+#alias remcurse {
+	sling 'remove curse' %1
+}
+
+#alias rempoison {
+	sling 'remove poison' %1
+}
+
+#alias sanct {
+	sling 'sanctuary' %1
+}
+
+#alias escape {
+	sling 'aura of escape'
+}
+
+#alias harm {
+	sling 'harm'
+}
+
+#alias healaura {
+	sling 'aura of heal'
+}
+
+#alias augury {
+	sling 'augury'
+}
+
+#alias invigaura {
+	sling 'aura of invigorate'
+}
+
+#alias rejuvaura {
+	sling 'aura of rejuv'
+}
+
+#var skill[opener] kill
+#var skill[combat] {}
+#class curist close

@@ -25,10 +25,11 @@
 #nop event_register expGain exp_gain {exp_gain %2}
 #nop event_register expGain exp_counter {exp_counter}
 
-event_register prompt update_tnl {update_tnl %6}
+event_register prompt update_tnl {update_tnl %0}
 event_register {variable MSDP_EXPERIENCE} expCounter {exp_counter}
 event_register {variable MSDP_EXPERIENCE} initExp {init_exp}
 event_register {variable MSDP_EXPERIENCE} exp_info {generate_exp_info}
+event_register {variable MSDP_LEVEL} exp_info {generate_exp_info}
 
 #event {VARIABLE UPDATED exp_mins} {
 	event_raise expMins
@@ -73,7 +74,7 @@ event_register {variable MSDP_EXPERIENCE} exp_info {generate_exp_info}
 #tab reloadExp
 #alias {reloadExp} {
   #class exp kill;
-  #read $lib/exp.tin;
+  load_module nukefire/exp
 }
 
 #alias update_tnl {
@@ -87,9 +88,7 @@ event_register {variable MSDP_EXPERIENCE} exp_info {generate_exp_info}
   #local _last_prompt $_prompt_list[-1];
   #if {@isD{$_last_prompt}} {
     #var MSDP_EXPERIENCE_TNL $_last_prompt
-  };
-  #math next_level $MSDP_LEVEL + 1;
-	#math real_exp_goal $exp_data[$next_level] - $exp_data[$MSDP_LEVEL]
+  }
 }
 
 #alias {exp_counter} {
@@ -101,13 +100,15 @@ event_register {variable MSDP_EXPERIENCE} exp_info {generate_exp_info}
 	#math exp_per_sec $exp[gain] / $exp_elapsed_time;
 	#math exp_min $exp_per_sec * 60;
 	#math exp_hour $exp_min * 60;
-	#nop #math exp_goalpct ($MSDP_EXPERIENCE / $exp_data[$next_level] * 100);
-#if {$MSDP_EXPERIENCE_TNL == 0 && $MSDP_LEVEL == 50} {
-  #math exp_bar_pct 1 - ( ($MSDP_EXPERIENCE - 45000000) / 45000000 * 1.000)
-} {
-  #math exp_bar_pct ($MSDP_EXPERIENCE_TNL / $real_exp_goal * 1.000)
-};
-	#math mins_to_level $MSDP_EXPERIENCE_TNL / $exp_mins
+  #math next_level $MSDP_LEVEL + 1;
+	#math real_exp_goal $exp_data[$next_level] - $exp_data[$MSDP_LEVEL];
+  #if {$MSDP_LEVEL == 50} {
+    #math MSDP_EXPERIENCE_TNL 90000000 - $MSDP_EXPERIENCE;
+    #math exp_bar_pct ($MSDP_EXPERIENCE_TNL / $real_exp_goal * 1.000)
+  } {
+    #math exp_bar_pct ($MSDP_EXPERIENCE_TNL / $real_exp_goal * 1.000)
+  };
+    #math mins_to_level $MSDP_EXPERIENCE_TNL / $exp_mins
 }
 
 #alias generate_exp_info {

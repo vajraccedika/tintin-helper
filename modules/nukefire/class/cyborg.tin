@@ -22,10 +22,83 @@
 	}
 }
 
+#nop --
+#nop Toggles
+#nop --
+
 init toggle[damcon] preferences off
 init toggle[turbo] preferences off
+init toggle[selfrepair] preferences off
+
+#nop --
+#nop Vars
+#nop --
+
+#var last_selfrepair 0
+#var selfrepair_delay 3
 
 #var skill[opener] kill
 #var skill[combat] pound
+
+#nop --
+#nop Alias
+#nop --
+
+#alias pp pound
+#alias sf selfrepair
+
+#alias do_selfrepair {
+	#if { ( @epoch{} - $selfrepair_delay ) < $last_selfrepair } {
+		#return 
+	} { 
+		queueAdd heal {selfrepair };
+		#var last_selfrepair @epoch{}
+	}
+}
+#tab sr_commands
+#alias sr_commands {
+	uinfo heal Use `aself h` <`1-99`> to set selfrep health threshold.;
+	uinfo heal Use `aself v` <`1-99`> to set selfrep move threshold.;
+	uinfo auto Use toggle selfrepair <`on`/`off`> to turn auto mode is on or off.;
+	sr_report
+}
+
+#alias sr_report {
+	uinfo heal Selfrep threshold at `$sr_thresh[health]`.;
+	uinfo heal Selfrep movement threshold `$sr_thresh[move]`.;
+	uinfo heal Use `sr_commands` to display auto selfrep commands.;
+	uinfo heal Auto selfrep is `$toggle[selfrepair]`.
+}
+
+#tab aselfrep
+#alias aselfrep {
+	#if {@isD{%2}} {
+		#switch {"%1"} {
+			#case {"h"} {#var sr_thresh[health] @clamp{%2;1;99}};
+			#case {"v"} {#var sr_thresh[move] @clamp{%2;1;99}};
+			#default {uinfo heal Please choose a percentage between `1-99`.};
+		};
+		sr_report;
+	};
+	#else {
+		#switch {"%1"} {
+			#case {"on"} {toggle selfrepair on};
+			#case {"off"} {toggle selfrepair off};
+			#default {sr_report}
+		}
+	}
+} {4}
+
+#alias auto_selfrepair {
+	#if {"$toggle[selfrepair]"=="on"} {
+		#if {@pct{$MSDP_HEALTH;$MSDP_HEALTH_MAX}<$sr_thresh[health]} {
+			#if {@pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}>$sr_thresh[move]} {
+				do_selfrepair
+			}
+		}
+	}
+}
+
+#ticker {aself} {auto_selfrepair} {0.2}
 
 #class cyborg close
