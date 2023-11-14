@@ -59,12 +59,13 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 
 #alias set_active_session {
 	#nop %0;
-	#all #show {<cfa>Ses "%0" activated}
+	#nop #all #show {<cfa>Ses "%0" activated};
+	#var act_ses[$MSDP_CHARACTER_NAME] 1
 }
 
 #alias set_inactive_session {
 	#nop %0;
-	#all #show {<cfa>Ses "%0" deactivated};
+	#nop #all #show {<cfa>Ses "%0" deactivated};
 	#var act_ses[$MSDP_CHARACTER_NAME] 0
 }
 
@@ -82,7 +83,7 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 		#list group_info create {<Ffff>Connected characters:};
 		#foreach {*MSDP_GROUP[%*]} {_ginf} {
 			#format _disp_line {%-9s - %.3s [%+2s] %+3s<Ffff>H %+3s<Ffff>M %+3s<Ffff>V [%.8s]}
-			{@disp_name_color{$MSDP_GROUP[$_ginf][name]}}
+			{@disp_name_color{$MSDP_GROUP[$_ginf][name];$_ginf}}
 			{$MSDP_GROUP[$_ginf][class]}
 			{$MSDP_GROUP[$_ginf][level]}
 			{@colorPct{$MSDP_GROUP[$_ginf][health]}}
@@ -91,7 +92,7 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 			{$MSDP_GROUP[$_ginf][position]};
 			#list group_info add {{$_disp_line}}
 		};
-		#if {@is_alias{display_right_tiles}} {display_right_tiles}
+		#if {@is_alias{display_right_tiles} && $act_ses[$MSDP_CHARACTER_NAME] == 1} {display_right_tiles}
 	}
 }
 
@@ -176,15 +177,15 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 
 #function disp_name_color {
 	#var _col <288>;
-	diaLog info received arg:%1;
-	#if {$act_ses == 1} {
+	diaLog info received arg:%1:%2;
+	#if {$act_ses[$MSDP_CHARACTER_NAME] == 1 && "%1" == "$MSDP_CHARACTER_NAME"} {
 		diaLog info Session is active;
 		#var _col <188>
 	};
-	#elseif {$MSDP_GROUP[%1][roomhash] != $MSDP_GROUP[$mg_index][roomhash]} {
+	#elseif {$MSDP_GROUP[%2][roomhash] != $new_room_hash} {
 		#var _col <f00c>
 	};
-	#return {${_col}%1}
+	#return {${_col}%1<288>}
 }
 
 register_session
