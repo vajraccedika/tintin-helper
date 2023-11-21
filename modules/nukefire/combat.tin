@@ -1,6 +1,3 @@
-#class combat kill
-#class combat open
-
 #nop --
 #nop Class Definitions
 #nop --
@@ -31,6 +28,44 @@ event_register {variable MSDP_OPPONENT_HEALTH} combat_info {generate_combat_info
 event_register {variable MSDP_OPPONENT_NAME} combat_info {generate_combat_info}
 event_register {variable MSDP_POSITION} combat_info {generate_combat_info}
 event_register mob_kill combat_info {generate_combat_info}
+#nop swap join and combat
+event_register join a_set_join_delay join_delay
+event_register join combat assist_cmd
+event_register {variable _queue[combat]} combat {next_combat {%2}}
+
+#nop --
+#nop Actions
+#nop --
+
+#nop no target
+#action {You can't kill what isn't here.$} {
+	event_raise no_target kill
+}
+
+#action {A light flashes on: //ERROR: NO TARGET\\$} {
+	event_raise no_target pound
+}
+
+#nop flee
+#action {%1 panics and attempts to flee!$} {
+	event_raise flee %1
+}
+
+#action {You join the fight!$} {
+	event_raise join
+}
+
+#alias join_delay {
+	#nop %0;
+	#math spellLock { @max{$spellLock;@mpoch{}} + @spellDelay{join}}
+}
+
+#alias assist_cmd {
+	#nop %0;
+	#if {&{skill[combat]}} {
+		queueAdd combat $skill[combat]
+	}
+}
 
 #alias generate_combat_info {
 	#nop %0;
@@ -42,25 +77,48 @@ event_register mob_kill combat_info {generate_combat_info}
 		#var _opp_health @clamp{$_opp_health;0;1};
 		#math _opp_health_pct $_opp_health * 100;
 		#var _opp_health_pct @int{$_opp_health_pct};
-		#var _opp_health_pct ${_opp_health_pct}%;
-		#format combat_info {<Ff0d5a1>%s: <Ffff>%.${_len_opp_name}s\n %s<B5f819d>}
-		{⚔}
-		{$MSDP_OPPONENT_NAME}
-		{@display_progress{$_opp_health;hits: $_opp_health_pct;$_opp_health_bar;health}}
+
+		#format _combat1 {<Ff0d5a1>%s: <Ffff>%.${_len_opp_name}s}
+		{⚔️}
+		{$MSDP_OPPONENT_NAME};
+		#format _combat2 { %s} 
+		{@display_progress{$_opp_health;health: $_opp_health_pct;$_opp_health_bar;health}<B5f819d>};
+		#list cdebug create {{${_combat1}}} {{${_combat2}}};
+		#var cdb2 $_combat2;
 	} {
-		#format combat_info {<Ff0d5a1>Position: <Ffff>%s\n<Ff0d5a1>☠ : <Ffff>%s}
+
+		#format _combat1 {<Ff0d5a1>Position: <Ffff>%s} {$MSDP_POSITION};
+		#format _combat2 {<Ff0d5a1>💀: <Ffff>%s} {$_dead_mob}
 		{$MSDP_POSITION}
-		{$_dead_mob}
+		{$_dead_mob};
+
 	};
-	#if {@is_alias{display_left_tiles}} {display_left_tiles}
+	#list combat_info create {{${_combat1}}} {{${_combat2}}};
+	#nop #if {@is_alias{display_left_tiles}} {display_left_tiles};
+	#if {@is_alias{display_left_info}} {display_left_info}
 }
 
 #alias init_combat_info {
-	set_left_tile 4 <B5f819d> combat_info 2 tile;
+	#nop set_left_tile 7 <B5f819d> combat_info 2 tile;
+	set_left_info 4 <B5f819d> combat_info 2;
 	init _dead_mob -;
-  generate_combat_info
+ 	generate_combat_info
 }
 
-init_combat_info
+#alias next_combat {
+	#nop %0;
+	diaLog combat next_combat fired;
+	#if {"%1" == "" && "$MSDP_POSITION" == "Fighting"} {
+		queueAdd combat $skill[combat]
+	}
+}
 
-#class combat close
+#highlight {ROCKS THE HELL OUT OF} {<188>}
+#highlight {MUTILATE{ |S}} {<188>}
+#highlight {DECIMATE{ |S}} {<188>}
+#highlight {WRECKS AND RUINS} {<188>}
+#highlight {DESTROY{ |S}} {<188>}
+#highlight {EVISCERATE{ |S}} {<188>}
+#highlight {OBLITERATE{ |S}} {<188>}
+
+init_combat_info

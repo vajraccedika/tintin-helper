@@ -45,6 +45,7 @@ event_register endRoomLook room_hash {do_room_hash}
 event_register endRoomLook generate_room_info {generate_room_info}
 event_register recall map {clear_exits}
 event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
+event_register cap_line map {cap_room %2}
 #nop event_register mapEnterRoom map {map_room}
 
 #nop -- This is a bad room that doesn't trigger room entry
@@ -73,6 +74,10 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 	#nop
 }
 
+#action {^{.*}$} {
+	event_raise cap_line {%0}
+} {9}
+
 #action {Obvious exits:$} {
 	diaLog map update exits;
 	event_raise updateExits;
@@ -87,14 +92,9 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 	}
 } {4}
 
-#action {{^.*$}} {
-	#if {$room[looking]==1} {
-		diaLog map roomcap:"%0";
-		#format room[desc] {%s%s}
-		{$room[desc]}
-		{%0}
-	}
-} {9}
+#action {^This room just has such a peaceful, easy feeling...$} {
+	event_raise peaceroom $new_room_hash
+}
 
 #action {^With a chant lost to the eons, you transcend space and time, fading into the void!$} {
 	event_raise recall
@@ -103,15 +103,6 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 #action {^Whispers of forgotten aeons echo, 'We return you return to your celestial sanctuary.'} {
 	#nop
 } {4}
-
-#action {{.*}} {
-	#if {$room[looking]==1} {
-		diaLog map roomcap:"%0";
-		#format room[desc] {%s%s}
-		{$room[desc]}
-		{%0}
-	}
-} {9}
 
 #action {^With a chant lost to the eons, you transcend space and time, fading into the void!$} {
 	event_raise recall
@@ -133,29 +124,49 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 	#nop %0;
 }
 
+#alias cap_room {
+	#nop %0;
+	#if {$room[looking]==1 && "%0" != ""} {
+		diaLog map roomcap:"%0";
+		#format {room[desc]} {%s%s}
+		{$room[desc]}
+		{%0}
+	}
+}
+
 #nop -- generate formatted line for room info block
 #alias generate_room_info {
 	#nop %0;
 	#var _ex_line {};
+	#list exit_info create {<Ff0d5a1>Exits :};
 	#foreach {North;East;South;West;Up;Down} {_x} {
 		#if {&{room[exits][$_x]}} {
 			diaLog map Exit for $_x exists;
-			#format _ex_line {%s<Ff0d5a1>%.1s : <Ffcfcfc>%s\n}
-		{$_ex_line}
-		{$_x}
-		{@formatExit{$room[exits][$_x];7;newline}}
+			#format _ex_line {<Ff0d5a1>%.1s : <Ffcfcfc>%s}
+			{$_x}
+			{$room[exits][$_x]};
+			#list exit_info add ${_ex_line}
 		};
 		diaLog map exit line="$_ex_line";
 	};
-	#format _room_line {<Ff0d5a1>Location info\nRoom  : <Ffff>%+12s\n<Ff0d5a1>Sector: <Ffcfcfc>%s\n<Ff0d5a1>%s\n%s}
-	{@formatExit{$room[name];10;tab}}
-	{$room[sector]}
-	{Exits :}
-	{$_ex_line};
-	#if {@is_alias{display_left_tiles}} {display_left_tiles}
+
+	#list room_info create {<Ff0d5a1>Location info:};
+
+	#format _rname {<Ff0d5a1>Room  : <Ffff>%s} {$room[name]};
+	#list room_info add $_rname;
+	#format _sector {<Ff0d5a1>Sector: <Ffcfcfc>%s} {$room[sector]};
+	#list room_info add ${_sector};
+	#if {@is_alias{display_left_info}} {display_left_info};
+	#nop #if {@is_alias{display_left_tiles}} {display_left_tiles}
 }
 
-
+#nop -- set room info to first left tile
+#alias init_room_info {
+	#nop set_left_tile 9 <B373b41> _room_line 16 box;
+	set_left_info 5 <B373b41> room_info 3;
+	set_left_info 6 <B373b41> exit_info 7;
+	generate_room_info
+}
 
 #alias get_room_info {
 	#nop %0;
@@ -215,6 +226,13 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 	}
 }
 
+#alias set_line_cap {
+	#nop %0;
+	#nop #action {^{.*}$} {
+
+	}
+}
+
 #nop -- we're not doing any mapping because we don't have MSDP room info
 #nop #alias map_room {
 	#nop %0;
@@ -225,8 +243,6 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 		#map dig @shortDir{$_re} NEW;
 	}
 }
-
-
 
 #function shortDir {
 	#switch {"%1"} {
@@ -239,10 +255,11 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 	}
 }
 
+#nop no longer needed
 #function formatExit {
 	diaLog map args:%1:%2:%3:;
 	#local {_char[newline]} {\n    };
-	#local _char[tab] \n\t;
+	#local _char[tab] {\n        };
 	#nop takes args string, limit;
 	#var last_space 0;
 	#list _tmp_line clear;
@@ -268,12 +285,6 @@ event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 		diaLog map return="%1";
 		#return %1
 	}
-}
-
-#nop -- set room info to first left tile
-#alias init_room_info {
-	set_left_tile 5 <B373b41> _room_line 16 box;
-	generate_room_info
 }
 
 init_room_info

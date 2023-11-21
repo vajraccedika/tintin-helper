@@ -114,16 +114,21 @@ event_register {variable MSDP_LEVEL} exp_info {generate_exp_info}
 #alias generate_exp_info {
   #nop %0;
   #math _xp_bar_length $left_panel - 3;
-  #format exp_info {<Ff0d5a1>XP: <Ffff>%s  <Ff0d5a1>XPH: <Ffff>%s\n %s<B5f819d>}
+  #format _xp1 {<Ff0d5a1>XP: <Ffff>%s  <Ff0d5a1>XPH: <Ffff>%s}
   {@hNum{$MSDP_EXPERIENCE}}
-  {@hNum{$exp_hour}}
+  {@hNum{$exp_hour}};
+  #format _xp2 { %s<B5f819d>} 
   {@display_progress{$exp_bar_pct;@hNum{$MSDP_EXPERIENCE_TNL} $expbar_text;$_xp_bar_length}};
-  #if {@is_alias{display_left_tiles}} {display_left_tiles}
+  #list exp_info create {${_xp1}} {{${_xp2}}};
+  #if @is_alias{display_left_info} display_left_info 3
 }
 
 #alias init_exp_info {
-  set_left_tile 2 <B5f819d> exp_info 2 tile;
+  #nop top panel border line;
+  #nop set_left_tile 3 <B5f819d> exp_info 2 tile;
+  set_left_info 2 <B5f819d> exp_info 2;
   exp_counter;
+  update_tnl;
   generate_exp_info
 }
 

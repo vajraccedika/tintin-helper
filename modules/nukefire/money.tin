@@ -7,7 +7,9 @@
 
 #var nukefire/money-description {Money handling for Nukefire.}
 #var nukefire/money-help {
-	Keep track of credits on hand, in bank, and total.
+	Keep track of credits on hand, in bank, and total.\n
+	Player must check balance in game in order to\n
+	populate all values.
 }
 
 #nop --
@@ -108,20 +110,25 @@ event_register {variable MSDP_MONEY} money_info {generate_money_info}
 
 #alias calc_total_creds {
 	#nop %0;
-	#math credits[total] $credits[cash] + $credits[balance]
+	#math credits[total] $MSDP_MONEY + $credits[balance]
 }
 
 #alias generate_money_info {
 	#nop %0;
-	#format money_info {<Ff0d5a1>Credits:<Ffff>\n🪙 %+6s 🏦 %+5s 💰 %+5s}
+	#var _money1 {<Ff0d5a1>Credits:<Ffff>};
+	#format _money2 {<Ffff>🪙 %+6s 🏦 %+6s 💰 %+6s}
 	{@hNum{$MSDP_MONEY}}
 	{@hNum{$credits[balance]}}
 	{@hNum{$credits[total]}};
-	#if @is_alias{display_left_tiles} {display_left_tiles}
+	#list money_info create {${_money1}} {${_money2}};
+
+	#if @is_alias{display_left_info} {display_left_info 5};
+	#nop #if @is_alias{display_left_tiles} {display_left_tiles}
 }
 
 #alias init_money_info {
-	set_left_tile 3 <B5f819d> money_info 2 tile;
+	set_left_info 3 <B5f819d> money_info 2;
+	#nop set_left_tile 5 <B5f819d> money_info 2 tile;
 	generate_money_info
 }
 
