@@ -63,8 +63,8 @@
 	#return $_ansi_strip
 }
 
-#var articles {the |^a |The |the |of |A |^an }
-#var item_flags {\(anti-good\)|\(glows\)|\(hums\)|\(good\)|\(invis\)|\(anti-evil\)|\(dark\)|\[socketed\]|\(magic\)|\(insured\)}
+#var articles {the |^a |The |the |of |A |^an | it| in}
+#var item_flags {\(h\)|\(g\)|\(m\)|\(anti-good\)|\(glows\)|\(hums\)|\(good\)|\(invis\)|\(anti-evil\)|\(dark\)|\[socketed\]|\(magic\)|\(insured\)}
 
 #function getKeyword {
 	#line sub var #line strip #var _raw_item %1;
