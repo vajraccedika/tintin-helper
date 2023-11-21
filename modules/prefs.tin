@@ -22,6 +22,12 @@ Usage:\n
 	}
 }
 
+#nop --
+#nop Events
+#nop --
+
+event_register {set preferences} {prefs} {set_preference {%2} {%3}}
+
 #nop simple toggle routine for on/off;
 #alias {toggle} {
     #if {&{toggle[%1]}} {
@@ -30,10 +36,10 @@ Usage:\n
         #if {"%2" == ""} {
             #if {"$toggle[%1]" == "on"} {
                 #var toggle[%1] off;
-                info preferences '%1' is now off;
+                warn preferences '%1' is now off;
             } {
                 #var toggle[%1] on;
-                info preferences '%1' is now on;
+                warn preferences '%1' is now on;
             }
         } {
             #switch {"%2"} {
@@ -103,7 +109,7 @@ Usage:\n
     #class prefs assign #var _pref_set_request 1;
     event_raise {set preferences} {%1} %2;
     #if {$_pref_set_request == 1} {
-        warn No handler for %1, I'm afraid.
+        warn No preference handler for %1.
     } {
         _preferences_save
     }
@@ -117,6 +123,19 @@ Usage:\n
         #class preferences write $db/$preference_file;
     } {
         warn No preference file available (#var preference_file)
+    }
+}
+
+#alias {^init_pref %1} {
+    #class preferences assign _pref_handler[%1]
+}
+
+#alias set_preference {
+    #if {$_pref_handler[%1]} {
+        #class preferences assign #var %1 %2;
+        #var _pref_set_request 0
+    } {
+        warn No preference handler for %1.
     }
 }
 

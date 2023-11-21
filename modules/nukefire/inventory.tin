@@ -45,15 +45,19 @@ event_register roomLook clear_contents {clear_contents}
 	#nop track-item give %1 %2
 }
 
-#action {^You get %1 from %2.$} {
+#action {You get %1 from %2.$} {
+	event_raise get_item {%1} {%2};
 	#nop track-item get %1 from %2
-}
+} {4}
 
 #action {^You drop %1.$} {
+	event_raise drop_item {%1};
 	#nop track-item drop %1 at room[name]/room[msdp][room-vnum]
 }
 
 #action {^You get %1.$} {
+	diaLog scav Get item="%1";
+	event_raise get_item {%1} {room};
 	#nop track-item get %1 at room[name]/room[msdp-room-vnum]
 }
 
@@ -62,7 +66,16 @@ event_register roomLook clear_contents {clear_contents}
 }
 
 #action {^You put %1 in %2.$} {
+	event_raise put_item {%1} {%2};
 	#nop track-item put %1 %2
+}
+
+#action {%1: you can't hold any more items.$} {
+	event_raise inv_full {%1} count
+}
+
+#action {%1: you can't carry that much weight.$} {
+	event_raise inv_full {%1} count
 }
 
 #nop --
@@ -89,22 +102,45 @@ event_register roomLook clear_contents {clear_contents}
 	#unvar room_contents
 }
 
+#alias inv_full {
+	#nop %0;
+	#var inv_full[%2] %1
+}
+
+#alias ggl {
+	#nop rem $cont_key;
+	g %1 $container[loot][key];
+	#nop wear $cont_key
+}
+
 #alias gg {
 	#nop rem $cont_key;
-	g %1 $cont_key;
+	g %1 $container[main][key];
 	#nop wear $cont_key
 }
 
 #alias pack {
 	#nop rem $cont_key;
-	put %1 $cont_key;
+	put %1 $container[main][key];
+	#nop wear $cont_key
+}
+
+#alias pl loot_pack
+#alias lp loot_pack
+#alias loot_pack {
+	#nop rem $cont_key;
+	put %1 $container[loot][key];
 	#nop wear $cont_key
 }
 
 #alias ccs {
 	#nop rem $cont_key;
-	l i $cont_key;
+	l i $container[main][key];
 	#nop wear $cont_key
+}
+
+#alias ccl {
+	l i $container[loot][key]
 }
 
 #class inventory close

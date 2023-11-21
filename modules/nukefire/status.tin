@@ -29,11 +29,9 @@
 event_register prompt 5update_hmv {update_hmv %0}
 event_register prompt 9hmv_change_check {hmv_change_check %2 %3}
 event_register prompt draw_hmv_bars draw_hmv_bars
-event_register {variable MSDP_HEALTH} hmvchange hmvchange
-event_register {variable MSDP_MOVEMENT} hmvchange hmvchange
-event_register {variable MSDP_MANA} hmvchange hmvchange
 event_register {variable MSDP_LEVEL} status generate_character_info
 event_register {variable MSDP_EXPERIENCE} status generate_character_info
+event_register {variable MSDP_CLASS} status generate_character_info
 
 #var prompt_regexp {^< [0-9]+H [0-9]+M [0-9]+V\s?(\(news\))?\s?(\(motd\))?\s?(\(\d+\))?\s?>}
 
@@ -41,15 +39,9 @@ event_register {variable MSDP_EXPERIENCE} status generate_character_info
 #nop Actions
 #nop --
 
-#action {~\e[0m< \e[0;36m%d\e[0mH \e[0;33m%d\e[0mM \e[0;32m%d\e[0mV >} {
-	#nop
-} {5}
-
-#alias hmvchange {
-	#nop %0;
-	#nop new val: %2, old val %3;
+#action {< %1H %2M %3V%4>} {
+	diaLog info Prompt
 }
-#nop event_register {variable MSDP_HEALTH} 
 
 #alias update_hmv {
 	#nop %0;
@@ -75,7 +67,6 @@ event_register {variable MSDP_EXPERIENCE} status generate_character_info
 		#var hmv[current][move] $prompt_v
 	}
 }
-
 
 #alias hmv_change_check {
 	#nop %0;
@@ -125,15 +116,22 @@ event_register {variable MSDP_EXPERIENCE} status generate_character_info
 
 #alias generate_character_info {
 	#nop %0;
-	#format character_info {<Ff0d5a1>Character info:\nName: <Ffff>%s\n<Ff0d5a1>Class: <Ffff>%.3s <Ff0d5a1>Level: <Ffff>%.2s}
-	{$MSDP_CHARACTER_NAME}
+	#list character_info clear;
+	#format {_char1} {%s} {<Ff0d5a1>Character info:};
+	#format {_char2} {<Ff0d5a1>Name: <Ffff>%s} {$MSDP_CHARACTER_NAME};
+	#format {_char3} {<Ff0d5a1>Class: <Ffff>%.3s <Ff0d5a1>Level: <Ffff>%.2s}
 	{$MSDP_CLASS}
 	{$MSDP_LEVEL};
-	#if @is_alias{display_left_tiles} {display_left_tiles}
+	#list character_info create {${_char1}} {${_char2}} {${_char3}};
+
+	#if @is_alias{display_left_info} {display_left_info 1}
 }
 
 #alias init_char_info {
-	set_left_tile 1 <B5f819d> character_info 3 tile;
+	#nop set_left_tile 1 <B5f819d> character_info 3 tile;
+	#nop bottom border line;
+	#nop set_left_show status <B5f819d> character_info 1;
+	set_left_info 1 <B5f819d> character_info 3;
 	generate_character_info
 }
 

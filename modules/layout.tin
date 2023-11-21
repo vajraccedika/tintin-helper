@@ -92,7 +92,6 @@ Commands:\n
 
 event_register {SESSION ACTIVATED} {layout} {layout_reset %1}
 
-
 #nop -- This probably needs a better home, but let's set up some tiles if they don't;
 #nop -- already exist;
 
