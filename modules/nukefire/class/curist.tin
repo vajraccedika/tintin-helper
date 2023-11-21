@@ -21,6 +21,14 @@
 		fail_module nukefire/class/curist unknown reason
 	}
 }
+
+load_module nukefire/autoheal
+
+#nop --
+#nop Alias
+#nop --
+
+
 #alias heal {
 	sling 'heal' %1
 }
@@ -74,7 +82,7 @@
 }
 
 #alias harm {
-	sling 'harm'
+	sling 'harm' %1
 }
 
 #alias healaura {
@@ -93,6 +101,34 @@
 	sling 'aura of rejuv'
 }
 
+#alias hf {
+	sling 'holyfist'
+}
+
+#alias sum {
+	sling 'summon' %1
+}
+
+#alias armor {
+	sling 'armor' %1
+}
+
+#alias bless {
+	sling 'bless' %1
+}
+
+#alias restore {
+	sling 'restor' %1
+}
+
+#alias pfe {
+	sling 'protection from evil' %1
+}
+
+#alias pfg {
+	sling 'protection from good' %1
+}
+
 #var skill[opener] kill
-#var skill[combat] {}
+
 #class curist close

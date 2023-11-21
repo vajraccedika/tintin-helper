@@ -18,7 +18,15 @@
 }
 
 #nop --
-#nop Vars
+#nop Events
+#nop --
+#event {SESSION CONNECTED} {
+	event_raise session_connected %0;
+}
+event_register menu_prompt nukefire {do_login}
+
+#nop --
+#nop Alias
 #nop --
 
 #tab connect
@@ -48,15 +56,15 @@
     #showme %0;
 	info Loading post-connect modules;
 	load_module prefs;
-	load_module layout;
 	load_module nuke_comms;
+	load_module layout;
 	load_module queues;
 	load_module nukefire/uinfo;
 	#foreach {$modules_on_connect[%*]} {module} {
 			load_module $module
 	};
 	info nukefire Loading nukefire modules;
-	#foreach {diag;position;combat;map;nuke_func;inventory;mobs;track;money;status;exp;multidisplay} tmp {
+	#foreach {diag;position;combat;map;nuke_func;map;inventory;items;mobs;track;money;status;exp;multidisplay;looting;players} tmp {
 		load_module nukefire/$tmp
 	};
 	#line oneshot #tick {clear} {#buffer end} {0.5};
@@ -92,6 +100,12 @@
 #action {^*** PRESS RETURN:} {#cr}
 
 #action {^%sMake your choice:} {
+	event_raise menu_prompt $menu_option;
+
+}
+
+#alias do_login {
+	#nop %0;
 	#if {"$menu_option" == "login"} {
 		#send 1;
 		#var menu_option logout
@@ -112,8 +126,8 @@
 
 #nop -- remove, we don't have either of these
 #nop -- Let's populate two tiles as samples as they're commonly asked for;
-event_register {variable MSDP_AREA_NAME} {right} {generate_area_info {%0} {%1} {%2}};
-event_register {variable MSDP_GROUP} {right} {generate_group_info {%0} {%1} {%2}};
+#nop event_register {variable MSDP_AREA_NAME} {right} {generate_area_info {%0} {%1} {%2}};
+event_register {variable MSDP_GROUP} {right} {#delay {group_info} {generate_group_info {%0} {%1} {%2}} {0.1}};
 
 #nop -- remove, we don't have this information
 #nop -- we'll have to screen scrape for location info
@@ -126,34 +140,593 @@ event_register {variable MSDP_GROUP} {right} {generate_group_info {%0} {%1} {%2}
 #nop -- kill triggers here
 #action {^%1's pitiful death cry assaults your ears!$} {
 	#buffer get _expline -1;
-	#var _dead_mob %1;
+	#format  _dead_mob {%n} {%1};
 	#regexp {$_expline} {You receive %d experience points.} {
-		event_raise {mob_kill} {$_dead_mob} {&1}
+		event_raise {mob_{( a share of)?}kill} {$_dead_mob} {&1}
 	} {
-		event_raise {mob_kill} {$_dead_mob} {0}
+		event_raise {mob_kill} {$_dead_mob} {$_kill_xp}
 	}
 }
 
 #nop You hear a vampire's last scream for mercy!
 #action {^You hear %1's last scream for mercy!$} {
 	#buffer get _expline -1;
-	#var _dead_mob %1;
-	#format {%n} _dead_mob %1;
+	#format  _dead_mob {%n} {%1};
 	#regexp {$_expline} {You receive %d experience points.} {
-		event_raise {mob_kill} {$_dead_mob} {&1}
+		event_raise {mob_{( a share of)?}kill} {$_dead_mob} {&1}
 	} {
-		event_raise {mob_kill} {$_dead_mob} {0}
+		event_raise {mob_kill} {$_dead_mob} {$_kill_xp}
 	}
 }
 
 #action {^%1 says, 'AARRRGGH!!'$} {
 	#buffer get _expline -1;
-	#format {%n} _dead_mob %1;
+	#format  _dead_mob {%n} {%1};
 	#regexp {$_expline} {You receive %d experience points.} {
-		event_raise {mob_kill} {$_dead_mob} {&1}
+		event_raise {mob_{( a share of)?}kill} {$_dead_mob} {&1}
 	} {
-		event_raise {mob_kill} {$_dead_mob} {0}
+		event_raise {mob_kill} {$_dead_mob} {$_kill_xp}
 	}
+}
+
+#action {^%1's pitiful death cry assaults your ears, sending shivers down your spine!$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^You sense %1's spirit fading, a whisper in the nuclear fallout.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^A gory silhouette is all that remains of %1, as death's embrace claims another soul.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {You hear %1's last scream for mercy, echoing through the halls of doom!$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^The air itself seems to mourn as %1 succumbs to fate, a tragic tableau of demise.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^%1's life force dissipates with a haunting wail, leaving a lingering sense of dread.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^The cruel laughter of fate echoes as %1's form crumples, a puppet with severed strings.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^Screams of agony mark %1's passage into the void, a soul lost to the wasteland.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^%1's lifeblood seeps into the earth, a crimson testament to the fallen.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^With a final, blood-curdling scream, %1's presence is violently ripped from this world.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^%1's final gasp is drowned out by the cacophony of the apocalypse.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}	
+}
+
+#action {^A spectral silence falls over the area, marking the passing of %1 into legend.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^Whispers of a citizen's last breath are carried away by the winds of desolation.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^A haunting silence follows the abrupt cessation of %1's tortured breaths.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^Whispers of %1's last breath are carried away by the winds of desolation.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^The echo of %1's death rattle is a grim lullaby for the damned.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^You catch the faint scent of %1's spilled life essence, soon to be forgotten.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^As %1's eyes lose their light, the shadow of death looms closer.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^The world seems to pause for a moment as %1's cries are abruptly extinguished.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^The sound of %1's body hitting the ground resonates, a thud of finality in the silence.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{&4}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
+}
+
+#action {^%1's armor plating clatters to the ground, its internal systems irreparably damaged.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^A series of pops and bangs precede %1's sudden and explosive end.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^The mechanical whirring of %1's systems ceases abruptly!$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^A final error code blinks out on %1's display before it powers down one last time.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^The hum of %1's machinery turns into a death rattle, signaling its final malfunction.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^%1's lights flicker out as it emits a final, static-filled cry of defeat.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}	
+}
+
+#action {^%1's frame contorts unnaturally before it goes silent, its core processor fried.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}	
+}
+
+#action {^The sound of short-circuiting electronics is %1's last utterance in this world.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^With a hiss of escaping steam, %1 deactivates, its form going rigid and cold.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^Oil bleeds from %1's chassis as it crumbles to the ground, its lights dimming forever.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^With a final beep, %1's robotic form collapses in a heap of metallic wreckage!$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^%1's movement stutters and fails as its power source irreversibly depletes.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^The glow of %1's optical sensors extinguishes as it falls silent and still.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^You watch as %1's systems crash, its body going limp and lifeless.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^%1's backup systems fail to initiate, signaling the end of its operational life.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^%1's limbs detach one by one as its central AI utters a final shutdown command.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^Sparks fly as %1's circuits overload, a symphony of destruction!} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^The eerie echo of grinding gears fades as %1 powers down permanently.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^The last of %1's warning alarms sound in a futile effort as it collapses into a pile of useless components.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
+}
+
+#action {^A cloud of smoke erupts from%1 as it shuts down for the last time, its parts scattering.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#var _kill_xp 0;
+	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
+		#if {@isD{{&4}}} {
+			#var _kill_xp {&4}
+		} {
+			#var _kill_xp {&3}
+		}
+	};
+	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {remains}
 }
 
 #action {^You are dead!  Sorry...$} {

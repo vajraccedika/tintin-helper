@@ -21,6 +21,13 @@
 		fail_module nukefire/class/ranger unknown reason
 	}
 }
+
+load_module nukefire/autoheal
+
+#nop --
+#nop Alias
+#nop --
+
 #alias heal {
 	sling 'heal' %1
 }

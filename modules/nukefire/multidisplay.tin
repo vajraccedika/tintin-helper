@@ -36,18 +36,13 @@
 #nop event_register {variable MSDP_MANA} multidisplay {generate_group_info}
 #nop event_register {variable MSDP_MOVEMENT} multidisplay {generate_group_info}
 #nop event_register prompt multidisplay {generate_group_info}
-
-#nop {
-	event_register {variable MSDP_HEALTH} msdp_group {generate_msdp_group}
-	event_register {variable MSDP_MANA} msdp_group {generate_msdp_group}
-	event_register {variable MSDP_MOVEMENT} msdp_group {generate_msdp_group}
-}	
-event_register prompt msdp_group {generate_msdp_group}
+	
+event_register prompt msdp_group {#delay {msdp_group} {generate_msdp_group} {0.1}}
 
 event_register player_death clear_group_info {clear_group_info}
 event_register player_death clear_msdp_group {clear_msdp_group}
 
-event_register {SESSION ACTIVATED} multidisplay {set_active_session %2}
+event_register {SESSION ACTIVATED} amultidisplay {set_active_session %2}
 event_register {SESSION DEACTIVATED} multidisplay {set_inactive_session %2}
 
 #nop set right tile for group display
@@ -60,20 +55,15 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 #alias set_active_session {
 	#nop %0;
 	#nop #all #show {<cfa>Ses "%0" activated};
-	#var act_ses[$MSDP_CHARACTER_NAME] 1
+	#var act_ses[$MSDP_CHARACTER_NAME] 1;
+	#if {@is_alias{display_right_tiles} && $act_ses[$MSDP_CHARACTER_NAME] == 1} {display_right_tiles};
+	#if {@is_alias{display_left_tiles} && $act_ses[$MSDP_CHARACTER_NAME] == 1} {display_left_tiles}
 }
 
 #alias set_inactive_session {
 	#nop %0;
 	#nop #all #show {<cfa>Ses "%0" deactivated};
 	#var act_ses[$MSDP_CHARACTER_NAME] 0
-}
-
-#alias #all {
-	#nukefire:img {%0};
-	#nukefire:goliath {%0};
-	#nukefire:denul {%0};
-	#nukefire:anatta {%0} 
 }
 
 #alias generate_group_info {
@@ -112,14 +102,15 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 		#var mg[name] $MSDP_CHARACTER_NAME;
 		#var mg_index @getMGindex{$MSDP_CHARACTER_NAME};
 		#if {$mg_index > 0} {
-			#all #var MSDP_GROUP[$mg_index] {${mg}};
-			#nop #foreach {$valid_sessions[%*]} {_s} {
+			#nop #all #var MSDP_GROUP[$mg_index] {${mg}};
+			#foreach {$valid_sessions[%*]} {_s} {
 				#$_s #var MSDP_GROUP[$mg_index] {${mg}}
 			}
-		} {
+		};
+		#else {
 			#math new_mg_idx $msdp_idx + 1;
-			#all #var MSDP_GROUP[$new_mg_idx] {${mg}};
-			#nop #foreach {$valid_sessions[%*]} {_s} {
+			#nop #all #var MSDP_GROUP[$new_mg_idx] {${mg}};
+			#foreach {$valid_sessions[%*]} {_s} {
 				#$_s #var MSDP_GROUP[$new_mg_idx] {${mg}}
 			}
 		}
