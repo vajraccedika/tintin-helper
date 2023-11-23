@@ -156,15 +156,15 @@ event_register cap_line map {cap_room %2}
 	#list room_info add $_rname;
 	#format _sector {<Ff0d5a1>Sector: <Ffcfcfc>%s} {$room[sector]};
 	#list room_info add ${_sector};
-	#if {@is_alias{display_left_info}} {display_left_info};
+	#if {@is_alias{display_bottom_left_info}} {display_bottom_left_info};
 	#nop #if {@is_alias{display_left_tiles}} {display_left_tiles}
 }
 
 #nop -- set room info to first left tile
 #alias init_room_info {
 	#nop set_left_tile 9 <B373b41> _room_line 16 box;
-	set_left_info 5 <B373b41> room_info 3;
-	set_left_info 6 <B373b41> exit_info 7;
+	set_bottom_left_info 1 <B373b41> room_info 3;
+	set_bottom_left_info 2 <B373b41> exit_info 7;
 	generate_room_info
 }
 
@@ -226,23 +226,9 @@ event_register cap_line map {cap_room %2}
 	}
 }
 
-#alias set_line_cap {
-	#nop %0;
-	#nop #action {^{.*}$} {
-
-	}
-}
-
-#nop -- we're not doing any mapping because we don't have MSDP room info
-#nop #alias map_room {
-	#nop %0;
-	#map set roomterrain $room[sector];
-	#map set roomname $room[name];
-	#map set roomid $new_room_hash;
-	#foreach *room[exits][%*] _re {
-		#map dig @shortDir{$_re} NEW;
-	}
-}
+#nop --
+#nop Functions
+#nop --
 
 #function shortDir {
 	#switch {"%1"} {
@@ -252,38 +238,6 @@ event_register cap_line map {cap_room %2}
 		#case {"West"} {#return w};
 		#case {"Up"} {#return u};
 		#case {"Down"} {#return d}
-	}
-}
-
-#nop no longer needed
-#function formatExit {
-	diaLog map args:%1:%2:%3:;
-	#local {_char[newline]} {\n    };
-	#local _char[tab] {\n        };
-	#nop takes args string, limit;
-	#var last_space 0;
-	#list _tmp_line clear;
-	#nop takes arg: exit room name;
-	#math limit $left_panel - %2;
-	#math _max_l ($limit * 2) - 5;
-	#if {@len{%1} >= $limit} {
-		#list _tmp_line tokenize {%1};
-		#loop {1} {$limit} {_tl} {
-			#if {"$_tmp_line[$_tl]"==" "} {
-				#var last_space $_tl;
-			};
-		};
-		#if {$last_space > 0} {
-			#list _tmp_line set $last_space {$_char[%3]};
-			#list _tmp_line collapse;
-			#format _tmp_line {%.${_max_l}s} {$_tmp_line};
-			diaLog map return="$_tmp_line";
-			#return {<Ffcfcfc>$_tmp_line}
-		}
-	};
-	#else {
-		diaLog map return="%1";
-		#return %1
 	}
 }
 

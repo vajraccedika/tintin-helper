@@ -30,6 +30,9 @@ event_register {variable position} position {update_msdp_pos %2}
 event_register mob_kill position {update_position standing}
 event_register {variable MSDP_OPPONENT_HEALTH} opp_eval {opponent_eval {%2} {%3}}
 event_register join position {update_position fighting}
+event_register player_death position {update_position dead}
+event_register eval_combat position {update_position fighting}
+event_register flee combat position {update_position standing}
 
 #event {VARIABLE UPDATED position[current]} {
 	event_raise {variable position} %1

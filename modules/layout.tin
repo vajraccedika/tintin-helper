@@ -63,14 +63,6 @@ Commands:\n
 	#var left_tiles[%1] {{color}{%2}{content}{%3}{height}{%4}{type}{%5}}
 }
 
-#alias {set_right_show %1 %2 %3 %4} {
-	#var right_shows[%1] {
-		{color} {%2};
-		{content} {%3};
-		{row} {%4}
-	}
-}
-
 #alias {set_left_info %1 %2 %3 %4} {
 	#var left_info[%1] {
 		{color} {%2}
@@ -79,11 +71,11 @@ Commands:\n
 	}
 }
 
-#alias {set_left_show %1 %2 %3 %4} {
-	#var left_shows[%1] {
-		{color} {%2};
-		{content} {%3};
-		{row} {%4}
+#alias {set_bottom_left_info %1 %2 %3 %4} {
+	#var bottom_left_info[%1] {
+		{color} {%2}
+		{content} {%3}
+		{height} {%4}
 	}
 }
 

@@ -5,12 +5,6 @@
 	#var tile_bg2 Bff3b41;
     #var tile_bg3 B5f819d;
 
-    #var left_heights {
-        {char_info} {3};
-        {exp} {2};
-        {money} {2};
-        {combat} {2}
-    };
 
     #var sum_heights 0;
 
@@ -69,12 +63,28 @@
             #math line_row $line_row + $left_info[$_idx][height] + 1;
             #draw $left_info[$_idx][color] line ${line_row} 1 ${line_row} ${line_right_col}
         }
+
+    };
+    #if {&{bottom_left_info}} {
+        #var line_row 7;
+        #foreach {*bottom_left_info[%*]} {_idx} {
+            #math line_row $line_row + $bottom_left_info[$_idx][height]
+        };
+        #math line_row ($line_row * -1);
+        #draw $bottom_left_info[$_idx][color] line ${line_row} 1 ${line_row} ${line_right_col};
+        diaLog layout first line at=$line_row;
+        #foreach {*bottom_left_info[%*]} {_idx} {
+            #math line_row $line_row + $bottom_left_info[$_idx][height] + 1;
+            diaLog layout bottom left linerow=$line_row;
+            #draw $bottom_left_info[$_idx][color] line ${line_row} 1 ${line_row} ${line_right_col}
+        }
     };
 	
 	#buffer end;
 	update_top_panel;
-    #if {&{left_info}} {display_left_info all};
+    #if {&{left_info}} {display_left_info};
 	#if {&{right_tiles}} {display_right_tiles};
+    #if {&{bottom_left_info}} {display_bottom_left_info};
 	#nop #if {&{left_tiles}} {display_left_tiles}
 }
 
@@ -145,45 +155,43 @@
     }
 }
 
-#nop to update only a single block, needs debugging
-#nop #alias {display_left_info %1} {
+#alias {display_bottom_left_info} {
     #nop %0;
-    #var _block %1;
-    #var start_row 1;
-    #foreach {*left_info[%*]} {_idx} {
+    #var start_row 6;
+    #foreach {*bottom_left_info[%*]} {_idx} {
+        #math start_row $start_row + $bottom_left_info[$_idx][height]
+    };
+    #math start_row $start_row * -1;
+    #foreach {*bottom_left_info[%*]} {_idx} {
         diaLog layout Displaying block=$_idx;
-        #math _end_block_row $start_row + $left_info[$_idx][height] - 1;
-        #var _info_line ${$left_info[$_idx][content]};
+        #math _end_block_row $start_row + $bottom_left_info[$_idx][height] - 1;
+        #var _info_line ${$bottom_left_info[$_idx][content]};
         #foreach {$_info_line[%*]} {_il} {
             diaLog layout start row=$start_row;
             #format _text {%s%-${left_rightside}s\x1b[0m}
-            {${left_info[$_idx][color]}}
+            {${bottom_left_info[$_idx][color]}}
             {$_il};
             #format _text {%.${left_rightside}s}
             {$_text};
             diaLog layout formatted content="${_text}";
-            #if {$_idx == $_block} {
-                #echo {{${_text}} {$start_row} {1}};
-            };
+            #echo {{${_text}\x1b[0m} {$start_row} {1}};
             #math start_row $start_row + 1
         };
         diaLog layout start_row=$start_row;
         diaLog layout end_block_row<=$_end_block_row;
-        #if {$_idx == $_block} {
-            #while {$start_row <= $_end_block_row} {
-                diaLog layout Adding blank line, $start_row < $_end_block_row;
-                #format _blank {%s%+${left_rightside}s\x1b[0m} 
-                {${left_info[$_idx][color]}}
-                {};
-                #echo {{${_blank}} {$start_row} {1}} ;
-                #math start_row $start_row + 1
-            };
-            #break
-        }; 
+        #while {$start_row <= $_end_block_row} {
+            diaLog layout Adding blank line, $start_row < $_end_block_row;
+            #format _blank {%s%+${left_rightside}s\x1b[0m} 
+            {${bottom_left_info[$_idx][color]}}
+            {};
+            #echo {{${_blank}} {$start_row} {1}} ;
+            #math start_row $start_row + 1
+        };
         #math start_row $start_row + 1
     }
-} {7}
+}
 
+#nop untested
 #alias {display_right_info} {
     #nop %0;
     #var start_row 1;

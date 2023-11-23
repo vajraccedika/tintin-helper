@@ -33,6 +33,7 @@ event_register join a_set_join_delay join_delay
 event_register join combat assist_cmd
 event_register {variable _queue[combat]} combat {next_combat {%2}}
 
+
 #nop --
 #nop Actions
 #nop --
@@ -53,6 +54,27 @@ event_register {variable _queue[combat]} combat {next_combat {%2}}
 
 #action {You join the fight!$} {
 	event_raise join
+}
+
+#nop -- combat lines
+#action {%1 assists you!$} {
+	event_raise eval_combat
+}
+
+#action {^You {OBLITERATE|EVISCERATE|DESTROY|ROCK THE HELL OUT OF|MUTILATE} %1 with {your|your powerful} {slash|pound|crush|hit|hack and slash}%2} {
+	event_raise eval_combat
+}
+
+#action {^%1 grazes you as %2 you.$} {
+	event_raise eval_combat
+}
+
+#action {^%1 barely %2 you.$} {
+	event_raise eval_combat
+}
+
+#action {^%1 {hits|slashes|pounds|bites|hacks and slashes|crushes} you{| hard| very hard| extremely hard}.$} {
+	event_raise eval_combat
 }
 
 #alias join_delay {
