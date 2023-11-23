@@ -1,0 +1,150 @@
+#class groupcon kill
+#class groupcon open
+
+#nop -- this is a general purpose toolset for controlling your group
+#nop -- change the names, aliases, etc to fit your own crew
+
+#var nukefire/groupcon-description {Session/group aliases}
+#var nukefire/groupcon-help {
+	Basic group controls, specific to Goliath.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/groupcon-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/groupcon
+	} {
+		fail_module nukefire/groupcon unknown reason
+	}
+}
+#nop --
+#nop Events
+#nop --
+
+event_register follow group {new_leader %2}
+
+#nop --
+#nop Actions
+#nop --
+
+#action {%1 starts following you.$} {
+	#local _idx @is{%1;followers};
+	#if {$_idx == 0} {
+		#list followers add $_idx
+	}
+}
+
+#action {You now follow %w.$} {
+	event_raise follow %1;
+}
+
+#action {You follow %w.$} {
+    #if {&{leader}==0} {
+        #var leader %1
+    }
+}
+
+#action {%1 stops following you.$} {
+	#local _idx @is{%1;followers};
+	#if {$_idx > 0} {
+		#list followers delete $_idx
+	}
+}
+
+#action {You stop following %w.$} {
+	event_raise stop_follow self %1
+}
+
+#action {[Group] %1 has left the group.$} {
+	#local _idx @is{%1;followers};
+	#if {$_idx > 0} {
+		#list group_members delete $_idx
+	}
+}
+
+#action {[Group] %1 joins the group.$} {
+	#local _idx @is{%1;followers};
+	#if {$_idx == 0} {
+		#list group_members add $_idx
+	}}
+
+#action {But you are already part of a group.$} {
+	#var grouped 1
+}
+
+#nop --
+#nop Alias
+#nop --
+
+#alias join {
+	#var groupleader %1;
+	follow %1
+}
+
+#alias new_leader {
+	#nop %0;
+	#var leader %1;
+	#if {$grouped == 1} {
+		group leave
+	};
+	group join $leader
+}
+
+#alias teamup {
+    group leave;
+    group new;
+    #info session save;
+    #foreach {$valid_sessions[%*]} {_vs} {
+        #if {"$_vs" != "$info[SESSION][NAME]"} {
+            #${_vs} {
+				follow self;
+                follow $MSDP_CHARACTER_NAME;
+            }
+        }
+    }
+}
+
+#alias do_join {
+	#nop %0;
+	#if {$grouped == 1} {
+		group leave
+	};
+	#if {"%1" == "$groupleader"} {
+		group join %1
+	}
+}
+
+#var picker[name] Anatta
+#var picker[ses] ana
+#tab rpick
+#alias rpick {request_pick}
+#alias request_pick {
+	$picker[ses] do_pick %1 %2;
+	event_raise request_pick %1 %2
+}
+
+#alias img {
+	#nukefire:img
+}
+
+#alias gol {
+	#nukefire:goliath
+}
+
+#alias den {
+	#nukefire:denul
+}
+
+#alias ana {
+	#nukefire:anatta
+}
+
+#highlight Goliath Tan
+#highlight Denul Azure
+#highlight Anatta Magenta
+#highlight IMG Yellow
+
+#class groupcon close

@@ -1,0 +1,84 @@
+#class vagrant kill
+#class vagrant open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/class/vagrant-description {Vagrant class utilities}
+#var nukefire/class/vagrant-help {
+	Aliases and skill definitions for Vagrant.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/class/vagrant-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/class/vagrant
+	} {
+		fail_module nukefire/class/vagrant unknown reason
+	}
+}
+
+#nop --
+#nop Toggles
+#nop --
+
+#nop --
+#nop -- Action
+#nop --
+
+#nop pick stuff, move somewhere else later
+#action {It resists your attempts to pick it.$} {
+	event_raise pick_fail no_pick
+}
+
+#action {You failed to pick the lock.$} {
+	event_raise pick_fail retry
+}
+
+#action {The lock quickly yields to your skills.$} {
+	event_raise pick_success
+}
+
+#nop --
+#nop Vars
+#nop --
+
+#var skill[opener] backstab
+#var skill[combat] disembowel
+
+#nop --
+#nop Alias
+#nop --
+
+#alias do_pick {
+	#var pick[door] %1;
+	#var pick[dir] %2;
+	queueAdd nco {pick $pick[door] $pick[dir]}
+}
+
+#alias pick_fail {
+	#nop %0;
+	#if {"%1" == "retry"} {
+		emote attempts to pick the $pick[door] to the $pick[dir].;
+		queueAdd nco {do_pick $pick[door] $pick[dir]}
+	};
+	#else {
+		emote is unable to pick the $pick[door] to the $pick[dir].
+	}
+}
+
+#alias pick_success {
+	#nop %0;
+	emote skillfully picks the $pick[door] to the $pick[dir].;
+	#unvar pick[door];
+	#unvar pick[dir]
+}
+
+#alias bs backstab
+
+
+#class vagrant close

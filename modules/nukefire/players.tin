@@ -1,0 +1,67 @@
+#class players kill
+#class players open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/players-description {Manage players db from wholist}
+#var nukefire/players-help {
+	Keep an updated list of players in db.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/players-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/players
+	} {
+		fail_module nukefire/players unknown reason
+	}
+}
+
+#nop --
+#nop Actions
+#nop --
+
+#action {OOOZERS$} {
+    #var cap_who 1
+}
+
+#action {^[%1] %w %3$} {
+    #if {$cap_who == 1} {
+        register_player %2
+    }
+} {9}
+
+#action {Players$} {
+    #var cap_who 1
+}
+
+#action {%d characters displayed.$} {
+    #var cap_who 0
+}
+
+#nop --
+#nop Alias
+#nop --
+
+#alias register_player {
+    #if {@is{%1;registered_players} == 0} {
+        #class playersdb assign {#list registered_players add %1};
+        #class playersdb write $db/nukefire/players.db
+    }
+}
+
+#function isPlayer {
+	#list _pl create %1;
+	#var _pl $_pl[1];
+    #list registered_players find $_pl p_or_m;
+    #return $p_or_m
+}
+
+#read $db/nukefire/players.db
+
+#class players close

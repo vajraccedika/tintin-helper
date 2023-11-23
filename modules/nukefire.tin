@@ -23,7 +23,10 @@
 #event {SESSION CONNECTED} {
 	event_raise session_connected %0;
 }
+
 event_register menu_prompt nukefire {do_login}
+
+event_register {variable MSDP_CLASS} {load_class}
 
 #nop --
 #nop Alias
@@ -69,6 +72,11 @@ event_register menu_prompt nukefire {do_login}
 	};
 	#line oneshot #tick {clear} {#buffer end} {0.5};
 	#if {@is_alias{player_setup}} {player_setup %1};
+}
+
+#alias load_class {
+	#nop %0;
+	load_module nukefire/class/$MSDP_CLASS
 }
 
 #action {^            What's your name, freejack?} {
@@ -324,20 +332,6 @@ event_register {variable MSDP_GROUP} {right} {#delay {group_info} {generate_grou
 }
 
 #action {^A spectral silence falls over the area, marking the passing of %1 into legend.$} {
-	#buffer get _expline -1;
-	#format  _dead_mob {%n} {%1};
-	#var _kill_xp 0;
-	#regexp {$_expline} {You receive{( a share of)?} %d experience points.} {
-		#if {@isD{&4}} {
-			#var _kill_xp {&4}
-		} {
-			#var _kill_xp {&3}
-		}
-	};
-	event_raise {mob_kill} {$_dead_mob} {$_kill_xp} {corpse}
-}
-
-#action {^Whispers of a citizen's last breath are carried away by the winds of desolation.$} {
 	#buffer get _expline -1;
 	#format  _dead_mob {%n} {%1};
 	#var _kill_xp 0;
