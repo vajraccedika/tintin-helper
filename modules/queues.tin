@@ -54,7 +54,51 @@ Combat queues clear at the end of combat automatically.\n
     }
 }
 
-#alias {queueAdd %1 %2} {
+#nop new queueAdd - for tasks that are exclusive, like heal
+#nop order: queue, command, task, exclusive
+#nop eg: queueAdd heal {invig anatta} {heal anatta} exclusive
+#alias {queueAdd} {
+    #var _q %1;
+    #var {_cmd} %2;
+    #var {_task} %3;
+    #if {"$_task" == ""} {
+        #var {_task} $_cmd
+    };
+    #var add[_cmd] $_cmd;
+    #var add[_task] $_task;
+    #var {_exc} %4;
+    #if {"$_exc" == "exclusive"} {
+        #var sindex @queue_task{$_q;$_task};
+        #if {$sindex} {
+            #if {"$_queue[$_q][$sindex]" == "{{$add}}"} {
+                #nop
+            };
+            #else {
+                info spell Replacing "$_queue[$_q][$sindex][_cmd]" with "$_cmd" at position $sindex in $_q queue;
+                #var _queue[$_q][$sindex][_cmd] {$_cmd};
+            }
+        };
+        #else {
+            info spell Adding command "$_cmd" to $_q queue;
+            #list _queue[$_q] add {{$add}}
+        }
+    };
+    #else {
+        #var sindex @queue_find{$_q;$_cmd};
+        #if {$sindex} {
+            info spell Not adding "$_cmd" as it is already in $_q queue at position $sindex;
+        };
+        #else {
+            info spell Adding command "$_cmd" to $_q queue;
+            #list _queue[$_q] add {{$add}};
+            queue_block
+        };
+    };
+    #unvar add
+}
+
+#nop original queueAdd
+#nop #alias {queueAdd %1 %2} {
     #list _queue[%1] find {%2} {sindex};
     #if {$sindex} {
         info spell Not adding "%2" as it is already in list at position $sindex;
@@ -63,17 +107,18 @@ Combat queues clear at the end of combat automatically.\n
         #list _queue[%1] add {%2};
         queue_block
     };
-
 }
 
 #alias {nco %1} {queueAdd nco {%1}}
 
 #alias queueRunner {
+    #unvar _q_cmd;
     #if { @mpoch{} > $spellLock} {
         #if {&{_queue[priority][]}} {
             #if {@spell_can_cast{}} {
-                info spell Executing $_queue[priority][1];
-                spell_cast_actual $_queue[priority][1];
+                #var _q_cmd $_queue[priority][1][_cmd];
+                info spell $_q_cmd;
+                spell_cast_actual $_q_cmd;
                 #list {_queue[priority]} delete 1;
                 queue_block;
                 #break
@@ -81,8 +126,9 @@ Combat queues clear at the end of combat automatically.\n
         };
         #if {&{_queue[heal][]}} {
             #if {@spell_can_cast{}} {
-                info spell Executing $_queue[heal][1];
-                spell_cast_actual $_queue[heal][1];
+                #var _q_cmd $_queue[heal][1][_cmd];
+                info spell Executing $_q_cmd;
+                spell_cast_actual $_q_cmd;
                 #list {_queue[heal]} delete 1;
                 queue_block;
                 #break
@@ -90,8 +136,9 @@ Combat queues clear at the end of combat automatically.\n
         };
         #if {&{_queue[any][]}} {
             #if {@spell_can_cast{}} {
-                info spell Executing $_queue[any][1];
-                spell_cast_actual $_queue[any][1];
+                #var _q_cmd $_queue[any][1][_cmd];
+                info spell Executing $_q_cmd;
+                spell_cast_actual $_q_cmd;
                 #list {_queue[any]} delete 1;
                 queue_block;
                 #break
@@ -100,8 +147,9 @@ Combat queues clear at the end of combat automatically.\n
         #if {&{_queue[combat][]}} {
             #if {"$MSDP_POSITION" == "Fighting"} {
                 #if {@spell_can_cast{}} {
-                    info spell Executing $_queue[combat][1];
-                    spell_cast_actual $_queue[combat][1];
+                    #var _q_cmd $_queue[combat][1][_cmd];
+                    info spell Executing $_q_cmd;
+                    spell_cast_actual $_q_cmd;
                     #list {_queue[combat]} delete 1;
                     queue_block;
                     #break
@@ -114,8 +162,9 @@ Combat queues clear at the end of combat automatically.\n
         #if {&{_queue[nco][]}} {
             #if {"$MSDP_POSITION" != "Fighting"} {
                 #if {@spell_can_cast{}} {
-                    info spell Executing $_queue[nco][1];
-                    spell_cast_actual $_queue[nco][1];
+                    #var _q_cmd $_queue[nco][1][_cmd];
+                    info spell Executing $_q_cmd;
+                    spell_cast_actual $_q_cmd;
                     #list {_queue[nco]} delete 1;
                     queue_block;
                     #break
@@ -125,8 +174,9 @@ Combat queues clear at the end of combat automatically.\n
         #if {&{_queue[move][]}} {
             #if {"$MSDP_POSITION" != "Fighting"} {
                 #if {@spell_can_cast{}} {
-                    info spell Executing $_queue[move][1];
-                    spell_cast_actual $_queue[move][1];
+                    #var _q_cmd $_queue[move][1][_cmd];
+                    info spell Executing $_q_cmd;
+                    spell_cast_actual $_q_cmd;
                     #list {_queue[move]} delete 1;
                     queue_block;
                     #break
@@ -142,7 +192,6 @@ Combat queues clear at the end of combat automatically.\n
     %0;
     #math spellLock { @max{$spellLock;@mpoch{}} + @spellDelay{$spellParts[1]}}
 }
-
 
 #alias {queue_block} {
 
@@ -163,59 +212,96 @@ Combat queues clear at the end of combat automatically.\n
 #nop -- ---------------------------------------------------------------
 
 #function {spell_can_cast} {
-    #var result 1;
+    #var can_cast 1;
     #list spellValidPositions find {$MSDP_POSITION} {check};
-    #if {$check == 0} { #var result 0};
-    #regex $PLAYER_FLAGS {-Knees-} { #var result 0 };
-    #regex $PLAYER_FLAGS {>BASH<}  { #var result 0 };
+    #if {$check == 0} { #var can_cast 0};
+    #regex $PLAYER_FLAGS {-Knees-} { #var can_cast 0 };
+    #regex $PLAYER_FLAGS {>BASH<}  { #var can_cast 0 };
+    #return $can_cast
 }
 
 #nop -- Spell delays are in 1000ths of a second;
 #func spellDelay {
     #switch {"%1"} {
-        #case {"heal"} #var result 3000;
-        #case {"convert"} #var result 12000;
-        #case {"shapechange"} #var result 4000;
-        #case {"fst"} #var result 3000;
-        #case {"charge"} #var result 3000;
-        #case {"smart_move"} #var result 250;
-        #case {"#path"} #var result 200;
-        #case {"mobAttack"} #var result 8000;
-        #case {"fkill"} #var result 5000;
-        #case {"get"} #var result 500;
-        #case {"drop"} #var result 500;
-        #case {"harvest"} #var result 0;
-        #case {"extract"} #var result 3000;
-        #case {"hellstream"} #var result 1000;
-        #case {"selfrepair"} #var result 2500;
-        #case {"invig"} #var result 3000;
-        #case {"kill"} #var result 1000;
-        #case {"hit"} #var result 500;
-        #case {"ambush"} #var result 0;
-        #case {"circle"} #var result 2000;
-        #case {"backstab"} #var result 2000;
-        #case {"rejuv"} #var result 2000;
-        #case {"disembowel"} #var result 3500;
-        #case {"pound"} #var result 5000;
-        #case {"neural"} #var result 8000;
-        #case {"grapple"} #var result 5000;
-        #case {"rogue"} #var result 5000;
-        #case {"dagger"} #var result 5000;
-        #case {"join"} #var result 1000;
-        #case {"pick"} #var result 1000;
-        #case {"look"} #var result 100;
+        #case {"heal"} #var _delay 3000;
+        #case {"convert"} #var _delay 12000;
+        #case {"shapechange"} #var _delay 4000;
+        #case {"fst"} #var _delay 3000;
+        #case {"charge"} #var _delay 3000;
+        #case {"smart_move"} #var _delay 250;
+        #case {"#path"} #var _delay 200;
+        #case {"mobAttack"} #var _delay 8000;
+        #case {"fkill"} #var _delay 5000;
+        #case {"get"} #var _delay 500;
+        #case {"drop"} #var _delay 500;
+        #case {"harvest"} #var _delay 0;
+        #case {"extract"} #var _delay 3000;
+        #case {"hellstream"} #var _delay 1000;
+        #case {"selfrepair"} #var _delay 2500;
+        #case {"invig"} #var _delay 3000;
+        #case {"kill"} #var _delay 1000;
+        #case {"hit"} #var _delay 500;
+        #case {"ambush"} #var _delay 0;
+        #case {"circle"} #var _delay 2000;
+        #case {"backstab"} #var _delay 2000;
+        #case {"rejuv"} #var _delay 2000;
+        #case {"disembowel"} #var _delay 3500;
+        #case {"pound"} #var _delay 4000;
+        #case {"neural"} #var _delay 6000;
+        #case {"grapple"} #var _delay 5000;
+        #case {"rogue"} #var _delay 5000;
+        #case {"dagger"} #var _delay 5000;
+        #case {"join"} #var _delay 1000;
+        #case {"look"} #var _delay 1000;
+        #case {"pick"} #var _delay 1000;
+        #case {"verify_room"} #var _delay 0;
+        #case {"get_one_item"} #var _delay 500;
+        #case {"recite"} #var _delay 500;
+        #case {"gg"} #var _delay 500;
+        #case {"request_recall"} #var _delay 500;
+        #case {"bs"} #var _delay 2000;
+        #case {"ka"} #var _delay 1000;
         #default {
-            #var result 2000;
-            info spell Unknown delay for %1, using $result ms
+            #var _delay 2000;
+            info spell Unknown delay for %1, using $_delay ms
             };
-    }
+    };
+    #return $_delay
 }
 
+#function queue_task {
+    #local _tmp_queue %1;
+    #local _tmp_task %2;
+    #foreach {*_queue[$_tmp_queue][%*]} {_qt} {
+        diaLog q Loop idx=$_qt;
+        diaLog q tmp_queue="$_tmp_queue";
+        diaLog q tmp_task="$_tmp_task";
+        diaLog q loop task="$_queue[$_tmp_queue][$_qt][_task]";
+        #if {"$_queue[$_tmp_queue][$_qt][_task]" == "$_tmp_task"} {
+            #return $_qt
+        }
+    };
+    #return 0
+}
 
+#function queue_find {
+    #local {_tmp_queue} {%1};
+    #local {_tmp_cmd} {%2};
+    #foreach {*_queue[$_tmp_queue][%*]} {_qc} {
+        diaLog q loop idx=$_qc;
+        diaLog q loop chunk cmd="$_queue[$_tmp_queue][$_qc][_cmd]";
+        diaLog q loop chunk task="$_queue[$_tmp_queue][$_qc][_cmd]";
+        #var $_queue[$_tmp_queue][$_qc];
+        #if {"$_queue[$_tmp_queue][$_qc][_cmd]" == "$_tmp_cmd"} {
+            #return $_qc
+        }
+    };
+    #return 0
+}
 #nop -- ---------------------------------------------------------------
 #nop -- Ticks
 #nop -- ---------------------------------------------------------------
 #tick {queue runner} {queueRunner} {0.2};
-event_register {VARIABLE UPDATED spellqueue} {queue_block}
+event_register {VARIABLE UPDATED spellqueue} queues {queue_block}
 
 #nop -- vim: syntax=tt

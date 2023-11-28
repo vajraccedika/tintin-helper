@@ -104,15 +104,17 @@ event_register {variable MSDP_LEVEL} exp_info {generate_exp_info}
 	#math real_exp_goal $exp_data[$next_level] - $exp_data[$MSDP_LEVEL];
   #if {$MSDP_LEVEL == 50} {
     #math MSDP_EXPERIENCE_TNL 90000000 - $MSDP_EXPERIENCE;
-    #math exp_bar_pct ($MSDP_EXPERIENCE_TNL / $real_exp_goal * 1.000)
-  } {
+    #math exp_bar_pct ($MSDP_EXPERIENCE_TNL / $real_exp_goal * 1.000);
+  };
+  #else {
     #math exp_bar_pct ($MSDP_EXPERIENCE_TNL / $real_exp_goal * 1.000)
   };
     #math mins_to_level $MSDP_EXPERIENCE_TNL / $exp_mins
-}
+};
 
 #alias generate_exp_info {
   #nop %0;
+  #var exp_bar_pct @clamp{$exp_bar_pct;0;1};
   #math _xp_bar_length $left_panel - 3;
   #format _xp1 {<Ff0d5a1>XP: <Ffff>%s  <Ff0d5a1>XPH: <Ffff>%s}
   {@hNum{$MSDP_EXPERIENCE}}

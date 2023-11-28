@@ -179,6 +179,17 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 	#return {${_col}%1<288>}
 }
 
+#function with_me {
+	#foreach {*MSDP_GROUP[%*]} {_wm} {
+		#if {"$MSDP_GROUP[$_wm][name]" == "%1"} {
+			#if {$MSDP_GROUP[$_wm][roomhash] == $new_room_hash} {
+				#return 1
+			}
+		}
+	};
+	#return 0
+}
+
 register_session
 
 #class multidisplay close

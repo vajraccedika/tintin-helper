@@ -41,8 +41,12 @@ event_register roomLook clear_contents {clear_contents}
 	event_raise roomContents 1 {%1}
 }
 
-#action {^You give %1 to %2.$} {
-	#nop track-item give %1 %2
+#action {You give %1 to %2.$} {
+	event_raise give_item {%1} {%2}
+}
+
+#action {%1 gives you %2.$} {
+	event_raise receive_item {%1} {%2}
 }
 
 #action {You get %1 from %2.$} {
@@ -55,7 +59,7 @@ event_register roomLook clear_contents {clear_contents}
 	#nop track-item drop %1 at room[name]/room[msdp][room-vnum]
 }
 
-#action {^You get %1.$} {
+#action {You get %1.$} {
 	diaLog scav Get item="%1";
 	event_raise get_item {%1} {room};
 	#nop track-item get %1 at room[name]/room[msdp-room-vnum]
@@ -65,7 +69,7 @@ event_register roomLook clear_contents {clear_contents}
 	#nop capture_contents %1 %2
 }
 
-#action {^You put %1 in %2.$} {
+#action {You put %1 in %2.$} {
 	event_raise put_item {%1} {%2};
 	#nop track-item put %1 %2
 }
@@ -76,6 +80,10 @@ event_register roomLook clear_contents {clear_contents}
 
 #action {%1: you can't carry that much weight.$} {
 	event_raise inv_full {%1} count
+}
+
+#action {There doesn't seem to be a %1 in %2.$} {
+	event_raise item_not_found {%1} {%2}
 }
 
 #nop --

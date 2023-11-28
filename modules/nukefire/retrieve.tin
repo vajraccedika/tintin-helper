@@ -1,0 +1,60 @@
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/retrieve-description {Manages corpse retrieval.}
+#var nukefire/retrieve-help {
+	Login, retrieve, loot corpse. Assumes hometown\n
+    is Tek Angeles.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/retrieve-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/retrieve
+	} {
+		fail_module nukefire/retrieve unknown reason
+	}
+}
+
+#nop --
+#nop Events
+#nop --
+
+event_register player_death retrieve {set_menu_login}
+event_register enter_world retrieve {bump_retrieve}
+
+#nop --
+#nop Alias
+#nop --
+
+#alias set_menu_login {
+    #nop %0;
+    #var menu_option login
+}
+
+#alias bump_retrieve {
+    #nop %0;
+    #var do_retrieve 1;
+    #line oneshot #ticker {retrieve} {do_retrieve} {1}
+}
+
+#alias do_retrieve {
+    #if {$do_retrieve == 1} {
+        e;
+        s;
+        w;
+        d;
+        s;
+        retrieve $MSDP_CHARACTER_NAME;
+        save;
+        #3 {get all $MSDP_CHARACTER_NAME;wear all};
+        n;
+        w;
+        drop $MSDP_CHARACTER_NAME;
+        #var do_retrieve 0
+    }
+}

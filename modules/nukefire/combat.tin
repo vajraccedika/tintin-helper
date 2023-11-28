@@ -27,11 +27,38 @@
 event_register {variable MSDP_OPPONENT_HEALTH} combat_info {generate_combat_info}
 event_register {variable MSDP_OPPONENT_NAME} combat_info {generate_combat_info}
 event_register {variable MSDP_POSITION} combat_info {generate_combat_info}
+event_register {variable MSDP_POSITION} next_combat {next_combat {}}
 event_register mob_kill combat_info {generate_combat_info}
 #nop swap join and combat
 event_register join a_set_join_delay join_delay
 event_register join combat assist_cmd
 event_register {variable _queue[combat]} combat {next_combat {%2}}
+event_register eval_combat combat {eval_combat {%2} {%3}}
+event_register mob_kill w_combat {clear_combat_queue}
+
+event_register no_target combat {clear_spellLock {%2}}
+event_register skill_fail combat {clear_spellLock {%2}}
+
+#nop --
+#nop Toggle
+#nop --
+
+init toggle[autodam] preferences on
+
+#nop --
+#nop Vars
+#nop --
+
+#var dam_type {hit|hits|slash|slashes|pound|pounds|whip|whips|sting|stings|bludgeon|bludgeons|claw|claws|pierce|pierces|blast|blasts|stab|stabs|hack and slash|hack and slashes|maul|mauls}
+
+#nop these have pattern a - b - with his/her/its adj dam_type
+#var hit_type {OBLITERATE|OBLITERATES|EVISCERATE|EVISCERATES|DESTROY| DESTROYS|MUTILATE|MUTILATES|DECIMATE|DECIMATES|MASSACRE|MASSACRES|ROCKS THE HELL OUT OF|WRECKS AND RUINS}
+#var hit_adj {deadly|incredibly powerful|ultimate|powerful|demoralizing|unrelenting}
+#var low_hit_types {barely|graze|grazes}
+#var mid_hit_types {hard|very hard|extremely hard}
+#var hit_pron {his|her|its|you|your}
+#var hit_pron2 {he|she|it}
+#nop lowest hits and RIP need their own action lines
 
 
 #nop --
@@ -43,8 +70,22 @@ event_register {variable _queue[combat]} combat {next_combat {%2}}
 	event_raise no_target kill
 }
 
-#action {A light flashes on: //ERROR: NO TARGET\\$} {
+#action {A light flashes on: //ERROR: NO TARGET\\} {
+	diaLog combat no target;
 	event_raise no_target pound
+}
+
+#action {Disembowel who!?$} {
+	event_raise no_target disembowel
+}
+
+#action {You require a target for Neural Overload.$} {
+	event_raise no_target neural
+}
+
+#nop -- failed skill, changes delay
+#action {You failed to initiate Neural Overload, and your systems destabilize.$} {
+	event_raise skill_fail neural
 }
 
 #nop flee
@@ -58,24 +99,63 @@ event_register {variable _queue[combat]} combat {next_combat {%2}}
 
 #nop -- combat lines
 #action {%1 assists you!$} {
-	event_raise eval_combat
+	event_raise eval_combat {none} {you}
 }
 
-#action {^You {OBLITERATE|EVISCERATE|DESTROY|ROCK THE HELL OUT OF|MUTILATE} %1 with {your|your powerful} {slash|pound|crush|hit|hack and slash}%2} {
-	event_raise eval_combat
+#nop big hits
+#action {^%1 {$hit_type} %3 with {$hit_pron} {$hit_adj} {$dam_type}{!!|!!!|!!!!!|!!!!!!}$} {
+	event_raise eval_combat {%1} {%3};
+}
+#nop Your hack and slash WRECKS AND RUINS a corrupted penguin!!!!!
+#action {^%1 {$dam_type} {$hit_type} %4{|!!|!!!|!!!!!|!!!!!!}$} {
+	event_raise eval_combat {%1} {%4};
 }
 
-#action {^%1 grazes you as %2 you.$} {
-	event_raise eval_combat
+#nop miss
+#action {^%1 {miss|misses} %3 with {$hit_pron} {$dam_type}.$} {
+	event_raise eval_combat {%1} {%3};
 }
 
-#action {^%1 barely %2 you.$} {
-	event_raise eval_combat
+#nop barely
+#action {^%1 barely {$hit_type} %3 with {$hit_pron} {$dam_type}.$} {
+	event_raise eval_combat {%1} {%3};
 }
 
-#action {^%1 {hits|slashes|pounds|bites|hacks and slashes|crushes} you{| hard| very hard| extremely hard}.$} {
-	event_raise eval_combat
+#nop graze
+#action {^%1 {graze|grazes} %3 as {$hit_pron2} {$dam_type} %6.$} {
+	event_raise eval_combat {%1} {%3};
+} {4}
+
+#nop hit
+#action {^%1 {$dam_type} %3{| hard| very hard| extremely hard}.$} {
+	event_raise eval_combat {%1} {%3}
 }
+
+#nop RIP
+#action {^%1 {RIP|RIPS} %3 to small fragments with {$hit_pron} {$dam_type}.$} {
+	event_raise eval_combat {%1} {%3};
+}
+
+#nop DEMOLISH but probably unnecessary
+#action {^%1 {DEMOLISH|DEMOLISHES} %3!!!!!!!!$} {
+	event_raise eval_combat {%1} {%3};
+}
+
+#action {^%1 {slash|slashes} at %2 but {miss|misses}!$} {
+	event_raise eval_combat {%1} {%3}
+}
+
+#action {^%1 {go|goes} psycho with {$hit_pron} hack and slash and miss %4 completely!} {
+	event_raise eval_combat {%1} {%4}
+}
+
+#action {^%1 tries to pierce the air instead of fighting %2.$} {
+	event_raise eval_combat {%1} {%2}
+}
+
+#nop --
+#nop Alias
+#nop --
 
 #alias join_delay {
 	#nop %0;
@@ -129,9 +209,31 @@ event_register {variable _queue[combat]} combat {next_combat {%2}}
 
 #alias next_combat {
 	#nop %0;
-	diaLog combat next_combat fired;
-	#if {"%1" == "" && "$MSDP_POSITION" == "Fighting"} {
-		queueAdd combat $skill[combat]
+	#if {"$toggle[autodam]" == "on"} {
+		diaLog combat next_combat fired;
+		#if {"%1" == "" && "$MSDP_POSITION" == "Fighting"} {
+			queueAdd combat $skill[combat]
+		}
+	}
+}
+
+#alias clear_combat_queue {
+	#nop %0;
+	diaLog lock clearing combat queue;
+	#if {&{_queue[combat][]} > 0} {
+		#var _queue[combat] {}
+	}
+}
+
+#alias eval_combat {
+	#nop %0;
+	diaLog zone Combat evaluator: %0
+}
+
+#alias clear_spellLock {
+	#nop %0;
+	#if {"%1" != "kill"} {
+		#var spellLock @mpoch{}
 	}
 }
 

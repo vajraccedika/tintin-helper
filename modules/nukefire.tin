@@ -26,7 +26,9 @@
 
 event_register menu_prompt nukefire {do_login}
 
-event_register {variable MSDP_CLASS} {load_class}
+event_register {variable MSDP_CLASS} nukefire {load_class}
+
+event_register enter_world nukefire {post_connect_load login}
 
 #nop --
 #nop Alias
@@ -76,11 +78,11 @@ event_register {variable MSDP_CLASS} {load_class}
 
 #alias load_class {
 	#nop %0;
-	load_module nukefire/class/$MSDP_CLASS
+	#format _cls {%l} $MSDP_CLASS;
+	load_module nukefire/class/$_cls
 }
 
 #action {^            What's your name, freejack?} {
-	#nop #line oneshot #tick {name} {#send ${char_name}} {1};
 	#line oneshot #tick {name} {#send ${char_name}} {0.5};
 	#class player read {$players/${char_name}_nukefire.player}
 }
@@ -130,12 +132,20 @@ event_register {variable MSDP_CLASS} {load_class}
 	post_connect_load reconnect
 }
 
-#action {^Kick Back.   Relax.   Dream.   Build.$} {post_connect_load login}
+#nop #action {^Kick Back.   Relax.   Dream.   Build.$} {post_connect_load login}
+
+#action {^Kick Back.   Relax.   Dream.   Build.$} {
+	event_raise enter_world
+}
+
+#action {^An unseen voice mutters, 'mzzzhngbt mnmndmzhmv!'$} {
+	event_raise reboot
+}
 
 #nop -- remove, we don't have either of these
 #nop -- Let's populate two tiles as samples as they're commonly asked for;
 #nop event_register {variable MSDP_AREA_NAME} {right} {generate_area_info {%0} {%1} {%2}};
-event_register {variable MSDP_GROUP} {right} {#delay {group_info} {generate_group_info {%0} {%1} {%2}} {0.1}};
+event_register {variable MSDP_GROUP} {right} {#delay {group_info} {generate_group_info {%0} {%1} {%2}} {0.5}};
 
 #nop -- remove, we don't have this information
 #nop -- we'll have to screen scrape for location info

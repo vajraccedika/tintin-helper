@@ -27,6 +27,13 @@
 #nop --
 
 #nop --
+#nop Events
+#nop --
+
+event_register pick_success vagrant pick_success
+event_register pick_fail vagrant {pick_fail %2}
+
+#nop --
 #nop -- Action
 #nop --
 
@@ -41,6 +48,14 @@
 
 #action {The lock quickly yields to your skills.$} {
 	event_raise pick_success
+}
+
+#action {But it's currently open!$} {
+	event_raise pick_fail open
+}
+
+#action {Oh.. it wasn't locked, after all..$} {
+	event_raise pick_fail open
 }
 
 #nop --
@@ -62,9 +77,13 @@
 
 #alias pick_fail {
 	#nop %0;
+	diaLog lock pick_fail="%1";
 	#if {"%1" == "retry"} {
 		emote attempts to pick the $pick[door] to the $pick[dir].;
 		queueAdd nco {do_pick $pick[door] $pick[dir]}
+	};
+	#elseif {"%1" == "open"} {
+		emote points to the open $pick[door] to the $pick[dir].
 	};
 	#else {
 		emote is unable to pick the $pick[door] to the $pick[dir].

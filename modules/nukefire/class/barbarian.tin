@@ -1,0 +1,35 @@
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/class/barbarian-description {Barbarian class utilities}
+#var nukefire/class/barbarian-help {
+	Aliases and skill definitions for barbarian.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/class/barbarian-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/class/barbarian
+	} {
+		fail_module nukefire/class/barbarian unknown reason
+	}
+}
+
+#nop --
+#nop Alias
+#nop --
+
+#alias hb {
+    headbutt
+}
+
+#alias ww {
+    whirlwind
+}
+
+#var skill[opener] ambush
+#var skill[combat] grapple

@@ -1,6 +1,3 @@
-#class position kill
-#class position open
-
 #nop --
 #nop Class Definitions
 #nop --
@@ -24,6 +21,10 @@
 	}
 }
 
+#nop --
+#nop Events
+#nop --
+
 event_register {variable MSDP_OPPONENT_NAME} position {opponent_eval {%2} {%3}}
 event_register updatePosition position {update_position %2}
 event_register {variable position} position {update_msdp_pos %2}
@@ -31,8 +32,10 @@ event_register mob_kill position {update_position standing}
 event_register {variable MSDP_OPPONENT_HEALTH} opp_eval {opponent_eval {%2} {%3}}
 event_register join position {update_position fighting}
 event_register player_death position {update_position dead}
-event_register eval_combat position {update_position fighting}
-event_register flee combat position {update_position standing}
+event_register eval_combat position {combat_position {%2} {%3}}
+event_register flee position {update_position standing}
+event_register room_follow position {update_position standing}
+event_register no_target position {update_position standing}
 
 #event {VARIABLE UPDATED position[current]} {
 	event_raise {variable position} %1
@@ -42,10 +45,9 @@ event_register flee combat position {update_position standing}
 	event_raise {variable MSDP_POSITION}
 }
 
-#alias update_msdp_pos {
-	#nop %0;
-	#format MSDP_POSITION {%n} {%1}
-}
+#nop --
+#nop Actions
+#nop --
 
 #action {^You are {standing|sitting|resting|hovering|flying|sleeping|}.$} {
 	#var position[current] %1
@@ -109,6 +111,10 @@ event_register flee combat position {update_position standing}
 	event_raise updatePosition standing
 }
 
+#nop --
+#nop Alias
+#nop --
+
 #alias opponent_eval {
 	diaLog kill oppponent position called;
 	#if {"%1"==""} {
@@ -125,6 +131,20 @@ event_register flee combat position {update_position standing}
 	diaLog kill Position="$MSDP_POSITION"
 }
 
+#alias update_msdp_pos {
+	#nop %0;
+	#format MSDP_POSITION {%n} {%1}
+}
+
+#alias combat_position {
+	#nop %0;
+	#format atkr {%l}  %1;
+	#format victim {%l} %2;
+	#if {"$atkr" == "you" || "$victim" == "you" || "$atkr" == "your"} {
+		update_position fighting
+	}
+}
+
 #alias {^sl$} {
 	#send sleep
 }
@@ -137,5 +157,3 @@ event_register flee combat position {update_position standing}
 		#send stand
 	}
 }
-
-#class position close

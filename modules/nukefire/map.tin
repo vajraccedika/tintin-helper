@@ -43,7 +43,7 @@ event_register updateExits map {clear_exits}
 event_register endRoomLook room_clear {do_room_clear}
 event_register endRoomLook room_hash {do_room_hash}
 event_register endRoomLook generate_room_info {generate_room_info}
-event_register recall map {clear_exits}
+event_register recall map {verify_room}
 event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 event_register cap_line map {cap_room %2}
 #nop event_register mapEnterRoom map {map_room}
@@ -68,6 +68,15 @@ event_register cap_line map {cap_room %2}
 #action {~^\e[0;36m%1 - \e[0;36m[%2] [%3]\e[0m\e[0m} {
 	event_raise roomLook {%1} {%2} {%3};
 	diaLog map Looking at room
+}
+
+#nop -- keep this from appearing in our room data
+#action {%1 disappears.$} {
+	#nop
+}
+#nop -- keep this from appearing in our room data
+#action {%1 appears in the middle of the room.$} {
+	#nop 
 }
 
 #action {~^\e[0;34m%1\e[0m} {
@@ -111,6 +120,14 @@ event_register cap_line map {cap_room %2}
 #action {^Whispers of forgotten aeons echo, 'We return you return to your celestial sanctuary.'} {
 	#nop
 } {4}
+
+#action {^You recite a recall scroll which dissolves.$} {
+	event_raise recall
+}
+
+#action {Denul utters the words, 'iegru ay ogqiso'.$} {
+	event_raise recall
+}
 
 #action {^You recite a recall scroll which dissolves.$} {
 	event_raise recall
@@ -187,10 +204,23 @@ event_register cap_line map {cap_room %2}
 	}
 }
 
+#alias verify_room {
+	#nop %0;
+	exits;
+	look
+}
+
 #alias clear_exits {
 	#nop %0;
 	#unvar room[exits];
 	diaLog map clearing exits;
+}
+
+#nop -- attempt to verify room in case of bad room data
+#alias verify_exits {
+	#nop %0;
+	exits;
+	look
 }
 
 #alias end_room_look {

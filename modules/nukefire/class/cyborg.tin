@@ -29,6 +29,7 @@
 init toggle[damcon] preferences off
 init toggle[turbo] preferences off
 init toggle[selfrepair] preferences off
+init toggle[overboost] preferences off
 
 #nop --
 #nop Vars
@@ -36,6 +37,8 @@ init toggle[selfrepair] preferences off
 
 #var last_selfrepair 0
 #var selfrepair_delay 3
+#var last_overboost 0
+#var overboost_delay 3
 
 #var skill[opener] kill
 #var skill[combat] pound
@@ -55,6 +58,7 @@ init toggle[selfrepair] preferences off
 		#var last_selfrepair @epoch{}
 	}
 }
+
 #tab sr_commands
 #alias sr_commands {
 	uinfo heal Use `aself h` <`1-99`> to set selfrep health threshold.;
@@ -99,6 +103,60 @@ init toggle[selfrepair] preferences off
 	}
 }
 
+#alias do_overboost {
+	#if { ( @epoch{} - $overboost_delay ) < $last_overboost } {
+		#return 
+	} { 
+		queueAdd heal {overboost };
+		#var last_overboost @epoch{}
+	}
+}
+
+#tab ob_commands
+#alias ob_commands {
+	uinfo heal Use `aoverb v` <`1-99`> to set selfrep move threshold.;
+	uinfo heal Use `aoverb m` <`1-99`> to set selfrep mana threshold.;
+	uinfo auto Use toggle overboost <`on`/`off`> to turn auto mode is on or off.;
+	sr_report
+}
+
+#alias ob_report {
+	uinfo heal Overboost move threshold at `$ob_thresh[move]`.;
+	uinfo heal Overboost movement threshold `$ob_thresh[mana]`.;
+	uinfo heal Use `ob_commands` to display auto selfrep commands.;
+	uinfo heal Auto overboost is `$toggle[overboost]`.
+}
+
+#tab aoverb
+#alias aoverb {
+	#if {@isD{%2}} {
+		#switch {"%1"} {
+			#case {"v"} {init ob_thresh[move] preferences @clamp{%2;1;99}};
+			#case {"m"} {init ob_thresh[mana] preferences @clamp{%2;1;99}};
+			#default {uinfo heal Please choose a percentage between `1-99`.};
+		};
+		ob_report;
+	};
+	#else {
+		#switch {"%1"} {
+			#case {"on"} {toggle overboost on};
+			#case {"off"} {toggle overboost off};
+			#default {ob_report}
+		}
+	}
+} {4}
+
+#alias auto_overboost {
+	#if {"$toggle[overboost]"=="on"} {
+		#if {@pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}<$ob_thresh[move]} {
+			#if {@pct{$MSDP_MANA;$MSDP_MANA_MAX}>$ob_thresh[mana]} {
+				do_overboost
+			}
+		}
+	}
+}
+
 #ticker {aself} {auto_selfrepair} {0.2}
+#ticker {aover} {auto_overboost} {0.5}
 
 #class cyborg close

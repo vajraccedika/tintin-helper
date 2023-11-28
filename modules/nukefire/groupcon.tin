@@ -42,6 +42,7 @@ event_register follow group {new_leader %2}
 }
 
 #action {You follow %w.$} {
+	event_raise room_follow %1;
     #if {&{leader}==0} {
         #var leader %1
     }
@@ -123,7 +124,40 @@ event_register follow group {new_leader %2}
 #alias rpick {request_pick}
 #alias request_pick {
 	$picker[ses] do_pick %1 %2;
-	event_raise request_pick %1 %2
+}
+
+#var recaller[name] Denul
+#var recaller[ses] den
+#tab rrecall request_recall
+#alias request_recall {
+	#if {@with_me{$recaller[name]}} {
+		$recaller[ses] escape
+	};
+	#else {
+		queueAdd nco {gg recall};
+		queueAdd nco {recite recall}
+	}
+}
+
+#nop -- combos
+
+#alias khd kill_hb_disembowel
+#alias kill_hb_disembowel {
+	kill %1;
+	#line oneshot #ticker {hb} {gol headbutt %1} {0.05};
+	#line oneshot #ticker {dis} {ana disembowel %1} {0.15}
+}
+
+#alias hb_disembowel {
+	gol hb;
+	#line oneshot #ticker {dis} {ana disembowel} {0.1}
+}
+
+#alias ka {
+	kill %1;
+	gol #line oneshot #ticker {assist} {assist img} {0.2};
+	ana #line oneshot #ticker {assist} {assist img} {0.2};
+	den #line oneshot #ticker {assist} {assist img} {0.2}
 }
 
 #alias img {

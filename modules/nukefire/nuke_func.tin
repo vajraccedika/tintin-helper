@@ -64,9 +64,10 @@
 }
 
 #var articles {the |^a |The |the |of |A |^an | it| in}
-#var item_flags {\(h\)|\(g\)|\(m\)|\(anti-good\)|\(glows\)|\(hums\)|\(good\)|\(invis\)|\(anti-evil\)|\(dark\)|\[socketed\]|\(magic\)|\(insured\)}
+#var item_flags {\(i\)|\(h\)|\(g\)|\(m\)|\(anti-good\)|\(glows\)|\(hums\)|\(good\)|\(invis\)|\(anti-evil\)|\(dark\)|\[socketed\]|\(magic\)|\(insured\)}
 
 #function getKeyword {
+	#local _tmpkey %2;
 	#line sub var #line strip #var _raw_item %1;
 	#replace _raw_item {{$crafted}} {};
 	#replace _raw_item {{$light}} {};
@@ -78,7 +79,11 @@
 	#replace _raw_item {{$articles}} {};
 	#format _raw_item {%p} {$_raw_item};
 	#list _item_keys create $_raw_item;
-	#return $_item_keys[-1]
+	#if {&{_tmpkey}} {
+		#return $_item_keys[-${_tmpkey}]
+	} {
+		#return $_item_keys[-1]
+	}
 }
 
 #function {cleanItem} {
