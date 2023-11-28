@@ -69,7 +69,7 @@ event_register enter_world nukefire {post_connect_load login}
 			load_module $module
 	};
 	info nukefire Loading nukefire modules;
-	#foreach {diag;position;combat;map;nuke_func;map;inventory;items;mobs;track;money;status;exp;multidisplay;looting;players} tmp {
+	#foreach {diag;position;combat;map;nuke_func;map;inventory;retrieve;items;mobs;track;money;status;exp;multidisplay;looting;players} tmp {
 		load_module nukefire/$tmp
 	};
 	#line oneshot #tick {clear} {#buffer end} {0.5};
