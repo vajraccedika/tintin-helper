@@ -46,6 +46,7 @@ event_register endRoomLook generate_room_info {generate_room_info}
 event_register recall map {verify_room}
 event_register {variable MSDP_ROOM_VNUM} msdp_room {disp_msdp_room}
 event_register cap_line map {cap_room %2}
+event_register peace_room map {add_peaceroom %2}
 #nop event_register mapEnterRoom map {map_room}
 
 #nop -- This is a bad room that doesn't trigger room entry
@@ -130,8 +131,42 @@ event_register cap_line map {cap_room %2}
 }
 
 #action {^You recite a recall scroll which dissolves.$} {
+	diaLog map Recall event called;
 	event_raise recall
 } {4}
+
+#action {*Click*$} {
+	event_raise unlock_success
+}
+
+#action {This room just has such a peaceful, easy feeling...$} {
+	event_raise peace_room $new_room_hash
+}
+
+#nop -- Skateboard echoes that muck up room data
+#action {^%1 {ollie|ollies} in on %2, sick moves!$} {
+	#nop
+}
+
+#action {^%1 {skate|skates} in on %2, rad!!!$} {
+	#nop
+}
+
+#action {^%1 {kickflip|kickflips} on %2, rad entrance!} {
+	#nop
+}
+
+#action {^%1 {grind|grinds} on %2 epic entrance!$} {
+	#nop
+}
+
+#action {^%1 {cruise|cruises} in on %2, totally gnarly!} {
+	#nop
+}
+
+#action {^%1 {slide|slides} in on a Santa Cruz VX Delfino Ego, shredding it!$} {
+	#nop
+}
 
 #nop --
 #nop Aliases
@@ -148,6 +183,13 @@ event_register cap_line map {cap_room %2}
 		#format {room[desc]} {%s%s}
 		{$room[desc]}
 		{%0}
+	}
+}
+
+#alias add_peaceroom {
+	#if {@is{%1;peace_rooms} == 0} {
+		#class rooms assign #list peace_rooms add %1;
+		#class rooms write $db/nukefire/rooms.db
 	}
 }
 
@@ -272,6 +314,8 @@ event_register cap_line map {cap_room %2}
 }
 
 init_room_info
+
+#read $db/nukefire/rooms.db
 
 #nop --
 #nop highlights

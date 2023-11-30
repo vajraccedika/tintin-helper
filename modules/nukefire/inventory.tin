@@ -86,6 +86,10 @@ event_register roomLook clear_contents {clear_contents}
 	event_raise item_not_found {%1} {%2}
 }
 
+#action {{A|An|Several}{| load| small packet of| large packet of| few| packet of| large packet of |pile of| large pile of| heap of| large heap of| mountain of| mound of| enormous mound of| enormous mountain of} credits is lying here.$} {
+	#line oneshot #ticker {scav_credits} {g all.credits} {0.1}
+}
+
 #nop --
 #nop Alias
 #nop --

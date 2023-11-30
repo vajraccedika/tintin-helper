@@ -36,6 +36,7 @@ event_register eval_combat position {combat_position {%2} {%3}}
 event_register flee position {update_position standing}
 event_register room_follow position {update_position standing}
 event_register no_target position {update_position standing}
+event_register enter_world position {update_position standing}
 
 #event {VARIABLE UPDATED position[current]} {
 	event_raise {variable position} %1

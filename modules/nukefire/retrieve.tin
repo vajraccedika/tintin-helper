@@ -20,6 +20,8 @@
 	}
 }
 
+#var do_retrieve 0
+
 #nop --
 #nop Events
 #nop --

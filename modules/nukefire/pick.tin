@@ -1,0 +1,83 @@
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/pick-description {Autokill module for Nukefire.}
+#var nukefire/pick-help {Requires mobs module. More help TBA.}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/pick-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/pick
+	} {
+		fail_module nukefire/pick unknown reason
+	}
+}
+
+#nop --
+#nop Events
+#nop --
+
+event_register pick_success vagrant pick_success
+event_register pick_fail vagrant {pick_fail %2}
+
+#nop --
+#nop -- Action
+#nop --
+
+#action {It resists your attempts to pick it.$} {
+	event_raise pick_fail no_pick
+}
+
+#action {You failed to pick the lock.$} {
+	event_raise pick_fail retry
+}
+
+#action {The lock quickly yields to your skills.$} {
+	event_raise pick_success
+}
+
+#action {But it's currently open!$} {
+	event_raise pick_fail open
+}
+
+#action {Oh.. it wasn't locked, after all..$} {
+	event_raise pick_fail open
+}
+
+#nop --
+#nop Alias
+#nop --
+
+#alias do_pick {
+	#var pick[door] %1;
+	#var pick[dir] %2;
+	queueAdd nco {pick $pick[door] $pick[dir]}
+}
+
+#alias pick_fail {
+	#nop %0;
+	diaLog lock pick_fail="%1";
+	#if {"%1" == "retry"} {
+		emote attempts to pick the $pick[door] to the $pick[dir].;
+		queueAdd nco {do_pick $pick[door] $pick[dir]}
+	};
+	#elseif {"%1" == "open"} {
+		emote points to the open $pick[door] to the $pick[dir].
+	};
+	#else {
+		emote is unable to pick the $pick[door] to the $pick[dir].
+	}
+}
+
+#alias pick_success {
+	#nop %0;
+    #if {"$MSDP_CHARACTER_NAME" != "$picker[name]"} {
+        emote skillfully picks the $pick[door] to the $pick[dir].;
+        #unvar pick[door];
+        #unvar pick[dir]
+    }
+}

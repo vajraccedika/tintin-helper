@@ -65,6 +65,11 @@ init toggle[autodam] preferences on
 #nop Actions
 #nop --
 
+#nop trying to walk out of combat
+#action {No way!  You're fighting for your life!$} {
+	event_raise failed_move combat
+}
+
 #nop no target
 #action {You can't kill what isn't here.$} {
 	event_raise no_target kill
@@ -81,6 +86,10 @@ init toggle[autodam] preferences on
 
 #action {You require a target for Neural Overload.$} {
 	event_raise no_target neural
+}
+
+#action {There are no valid targets to perform a whirlwind strike on.$} {
+	event_raise no_target whirlwhind
 }
 
 #nop -- failed skill, changes delay

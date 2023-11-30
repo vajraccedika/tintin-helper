@@ -1,0 +1,54 @@
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/colors-description {colors manager.}
+#var nukefire/colors-help {
+	A very simple color manager, all it does is track\n
+	color and re-fire if they're registered.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/colors-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/color
+	} {
+		fail_module nukefire/color unknown reason
+	}
+}
+
+#alias show_color {
+    #var n %1;
+    #var max_n %2;
+    #if {$max_n > 555} {
+        #var max_n 555
+    };
+    #while {$n <= $max_n} {
+        #unvar code;
+        #if {$n<10} {
+            #format num {00%s} $n
+        };
+        #elseif {$n<100} {
+            #format num {0%s} $n
+        };
+        #else {
+            #var num $n
+        };
+        #format code {@*[F%s] = @[F%s]} {$num} {$num};
+        say ${code}MMMMM;
+        #list _dig tokenize $num;
+        #math n $n+1;
+        #if {$_dig[-2] == 5 && $_dig[-1] == 5} {
+            #math n $n + 45;
+            #continue
+        };
+        #if {$_dig[-1] == 5} {
+            #math n $n+4;
+            #continue
+        };
+
+    }
+}
