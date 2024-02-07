@@ -243,10 +243,10 @@ Combat queues clear at the end of combat automatically.\n
         #case {"hit"} #var _delay 500;
         #case {"ambush"} #var _delay 0;
         #case {"circle"} #var _delay 8000;
-        #case {"backstab"} #var _delay 3000;
+        #case {"backstab"} #var _delay 3500;
         #case {"rejuv"} #var _delay 2000;
         #case {"disembowel"} #var _delay 5000;
-        #case {"pound"} #var _delay 4000;
+        #case {"pound"} #var _delay 4500;
         #case {"neural"} #var _delay 6000;
         #case {"grapple"} #var _delay 6000;
         #case {"rogue"} #var _delay 6000;
@@ -254,13 +254,26 @@ Combat queues clear at the end of combat automatically.\n
         #case {"join"} #var _delay 1000;
         #case {"look"} #var _delay 1000;
         #case {"pick"} #var _delay 1000;
-        #case {"verify_room"} #var _delay 0;
+        #case {"verify_room"} #var _delay 500;
         #case {"get_one_item"} #var _delay 500;
         #case {"recite"} #var _delay 500;
         #case {"gg"} #var _delay 500;
         #case {"request_recall"} #var _delay 500;
         #case {"bs"} #var _delay 2000;
         #case {"ka"} #var _delay 1000;
+        #case {"overboost"} #var _delay 3000;
+        #case {"flurry"} #var _delay 4000;
+        #case {"rend"} #var _delay 3000;
+        #case {"psiattack"} #var _delay 6000;
+        #case {"psiblast"} #var _delay 6000;
+        #case {"scar"} #var _delay 5000;
+        #case {"radblast"} #var _delay 6000;
+        #case {"ww"} #var _delay 6000;
+        #case {"headbutt"} #var _delay 5000;
+        #case {"sonic"} #var _delay 4000;
+        #case {"hbs""} #var _delay 3000;
+        #case {"hd"} #var _delay 5000;
+        #case {"suplex"} #var _delay 5000;
         #default {
             #var _delay 2000;
             info spell Unknown delay for %1, using $_delay ms

@@ -42,7 +42,7 @@
         #list _dig tokenize $num;
         #math n $n+1;
         #if {$_dig[-2] == 5 && $_dig[-1] == 5} {
-            #math n $n + 45;
+            #math n $n + 44;
             #continue
         };
         #if {$_dig[-1] == 5} {
@@ -50,5 +50,157 @@
             #continue
         };
 
+    }
+}
+
+#nop usage: shade <start color> <end color> <jump> <arg> <text>
+#alias {shade %1 %2 %3 %4 %5} {
+    #var start_color @hexToDec{%1};
+    #var end_color @hexToDec{%2};
+    #var color_step auto;
+    #var arg %4;
+    #var text %5;
+    #var vchars $text;
+    #replace vchars { } {};
+    #var nchars @len{$vchars};
+    #if {@isD{%3}} {
+        #var color_step %3
+    };
+    #else {
+        #math color_step ($end_color - $start_color) / $nchars;
+        #if {$color_step < 1} {
+            #var color_step 1
+        };
+    };
+    #math n_colors (($end_color - $start_color) / $color_step) + 1;
+    #list text_list tokenize $text;
+    #math chars_per_color $nchars / $n_colors;
+    #var curr_color $start_color;
+    #var n_curr_color 1;
+    #if {$chars_per_color < 1} {
+        #var chars_per_color 1
+    };
+    #if {{$arg} == {loop}} {
+        #math midpoint {@len{$text}/2};
+        #nop #math {chars_per_color} $chars_per_color /2;
+        #nop #if {$chars_per_color < 1} {#var chars_per_color 1};
+        #if {@isOdd{$nchars}} {
+            #math midpoint $midpoint + 1
+        };
+        #math chars_per_color ($nchars - $midpoint) / $n_colors;
+        #math lower_start $nchars % $n_colors;
+        #if {@isOdd{$nchars} } {
+        };
+        #foreach {*text_list[%*]} {_char} {
+            #var tmp_char $text_list[$_char];
+            #if {{$tmp_char} == { }} {#continue};
+            #var tmp_color @decToHex{$curr_color};
+            #format col_char {@[F%s]%s}
+            {$tmp_color}
+            {$tmp_char};
+            #list text_list set $_char {$col_char};
+            #math n_curr_color $n_curr_color + 1;
+            #if {$n_curr_color > $chars_per_color} {
+                #if {$_char >= $midpoint && @isOdd{$nchars}} {
+                    #math curr_color $curr_color - $color_step;
+                    #if {$curr_color < $start_color} {
+                        #var curr_color $start_color
+                    }
+                };
+                #elseif {$_char > $midpoint} {
+                    #math curr_color $curr_color - $color_step;
+                    #if {$curr_color < $start_color} {
+                        #var curr_color $start_color
+                    }
+                };
+                #else {
+                    #if {$_char >= $lower_start} {
+                        #math curr_color $curr_color + $color_step;
+                    };  
+                    #if {$curr_color > $end_color } {
+                        #var curr_color $end_color
+                    }
+                };
+                #var n_curr_color 1
+            };
+            #if {$curr_color > $end_color} {
+                #var curr_color $end_color
+            }
+        }
+    };
+    #else {
+        #if {{$arg} == {reverse}} {
+            #list text_list reverse
+        };
+        #foreach {*text_list[%*]} {_char} {
+            #var tmp_char $text_list[$_char];
+            #if {{$tmp_char} == { }} {#continue};
+            #var tmp_color @decToHex{$curr_color};
+            #format col_char {@[F%s]%s}
+            {$tmp_color}
+            {$tmp_char};
+            #list text_list set $_char {$col_char};
+            #math n_curr_color $n_curr_color + 1;
+            #if {$n_curr_color > $chars_per_color} {
+                #math curr_color $curr_color + $color_step;
+                #var n_curr_color 1
+            };
+            #if {$curr_color > $end_color} {
+                #var curr_color $end_color
+            }
+        };
+        #if {{$arg} == {reverse}} {
+            #list text_list reverse;
+        };
+    };
+    #list text_list add @n;
+    #list text_list collapse;
+    #echo {total colors: $n_colors};
+    #echo {total chars : $nchars};
+    #echo $text_list
+}
+
+#function decToHex {
+    #var answer {};
+    #var _val %1;
+    #var _base 6;
+    #while {$_val > 0} {
+        #math _mod $_val % $_base;
+        #cat answer $_mod;
+        #math _val $_val / $_base
+    };
+    #if {"$answer" != {}} {
+        #format {answer} {%r} {$answer};
+        #if {$answer > 555} {
+            #var answer 555
+        };
+        #loop {@len{$answer}} {3} {_l} {
+            #if {$_l < 3} {
+                #format answer {0%s} {$answer}
+            }
+        };
+        #return $answer
+    };
+    #else {
+        #return 0
+    }
+}
+
+#function hexToDec {
+    #var _val %1;
+    #if {$_val == 0} {
+        #return 0
+    };
+    #else {
+        #list _val tokenize $_val;
+        #var ans $_val[1];
+        #nop #echo {answer = $ans};
+        #loop 2 &{_val[]} {_vh} {
+            #nop #echo {val = $_val[$_vh]};
+            #math ans $ans * 6;
+            #math ans $ans + $_val[$_vh];
+            #nop #echo {post math answer = $ans}
+        };
+        #return $ans
     }
 }

@@ -73,47 +73,51 @@ init comms-session comms;
 #nop -- Group communications
 #nop -- ---------------------------------------------------------------
 
-#action {^You say, '%1'$} {
+#action {You say, '%1'$} {
 	event_raise {commsSay} {You} {%1} {%0};
 } {8}
 
-#action {^%1 {says|grunts}, '%1'$} {
+#action {%1 {says|grunts}, '%1'$} {
 	event_raise {commsSay} {%1} {%3} {%0};
 } {8}
 
-#action {^%1 gossips, '{.*}'$} {
+#action {%1 gossips, '{.*}'$} {
 	event_raise commsGos {%1} {%2} {%0}
 } {8}
 
-#action {^%1 auctions, '{.*}'$} {
+#action {%1 bonejacks, '{.*}'$} {
+	event_raise commsJack {%1} {%2} {%0}
+} {8}
+
+#action {%1 auctions, '{.*}'$} {
 	event_raise commsAuc {%1} {%2} {%0}
 } {8}
 
-#action {^You auction, '{.*}'$} {
+#action {You auction, '{.*}'$} {
 	event_raise commsAuc {me} {%1} {%0}
 } {8}
 #nop {\e[0m\e[38;5;198mYou\e[0;00m \e[38;5;019mgossip,\e[0;00m \e[38;5;198m'huehue'\e[0;00m}
-#action {^You gossip, '{.*}'$} {
+#action {You gossip, '{.*}'$} {
 	event_raise commsGos {me} {%1} {%0}
 } {8}
 
-#action {^%1 hollers, {.*}} {
+#action {%1 hollers, {.*}} {
 	event_raise commsHoller {%1} {%2} {%0}
 } {8}
 
-#action {^[Group] %1 says, '{.*}'$} {
+#action {[Group] %1 says, '{.*}'$} {
 	event_raise commsGroup {%1} {%2} {%0}
 } {8}
 
-#action {^You group-say, '{.*}'$} {
+#action {You group-say, '{.*}'$} {
     event_raise commsGroup {me} {%1} {%0}
 } {8}
 
-#action {^%1 telepaths to you, '{.*}'} {
+#action {%1 telepaths to you, '{.*}'} {
 	event_raise {commsTell} {%1} {%2} {%0}
 } {8}
 
-#action {^You telepath %1, '{.*}'} {
+#action {You telepath %1, '{.*}'} {
 	event_raise {commsTell} {me -> %1} {%2} {%0}
 } {8}
 
@@ -121,7 +125,7 @@ init comms-session comms;
 #nop -- Events
 #nop -- ---------------------------------------------------------------
 event_register {commsGroup} {nuke_comms} {update_chat group {%4}};
-event_register {commsClan}  {nuke_comms} {update_chat clan {%4}};
+event_register {commsJack}  {nuke_comms} {update_chat jack {%4}};
 event_register {commsGos}   {nuke_comms} {update_chat gos {%4}};
 event_register {commsGemote}{nuke_comms} {update_chat gemote {%4}};
 event_register {commsTell}  {nuke_comms} {update_chat tell {%4}};

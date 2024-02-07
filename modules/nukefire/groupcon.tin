@@ -95,6 +95,7 @@ event_register follow group {new_leader %2}
 }
 
 #alias teamup {
+	fol self;
     group leave;
     group new;
     #info session save;
@@ -118,8 +119,8 @@ event_register follow group {new_leader %2}
 	}
 }
 
-#var picker[name] Anatta
-#var picker[ses] ana
+#var picker[name] IMG
+#var picker[ses] img
 #tab rpick
 #alias rpick {request_pick}
 #alias request_pick {
@@ -144,13 +145,28 @@ event_register follow group {new_leader %2}
 #alias khd kill_hb_disembowel
 #alias kill_hb_disembowel {
 	kill %1;
-	#line oneshot #ticker {hb} {gol headbutt %1} {0.05};
-	#line oneshot #ticker {dis} {ana disembowel %1} {0.15}
+	#line oneshot #ticker {hb} {gol headbutt %1} {0.1};
+	#line oneshot #ticker {dis} {ana disembowel %1} {0.2}
 }
 
+#alias hd hb_disembowel
 #alias hb_disembowel {
-	gol hb;
-	#line oneshot #ticker {dis} {ana disembowel} {0.1}
+	gol hb %1;
+	#line oneshot #ticker {dis} {ana disembowel %1} {0.1}
+}
+
+#alias kbs kill_headbutt_backstab
+#alias kill_headbutt_backstab {
+	kill %1;
+	#line oneshot #ticker {hb} {gol headbutt %1} {0.1};
+	#line oneshot #ticker {dis} {ana backstab %1} {0.2}
+}
+
+#alias hbs headbutt_backstab
+#alias headbutt_backstab {
+	#line oneshot #ticker {hb} {gol headbutt %1} {0.1};
+	#line oneshot #ticker {dis} {ana backstab %1} {0.2};
+	#line oneshot #ticker {res} {rescue anatta} {0.3}
 }
 
 #alias ka {

@@ -35,6 +35,7 @@ event_register join combat assist_cmd
 event_register {variable _queue[combat]} combat {next_combat {%2}}
 event_register eval_combat combat {eval_combat {%2} {%3}}
 event_register mob_kill w_combat {clear_combat_queue}
+event_register mob_kill a_combat {postcombat_spellLock mob_kill}
 
 event_register no_target combat {clear_spellLock {%2}}
 event_register skill_fail combat {clear_spellLock {%2}}
@@ -48,6 +49,8 @@ init toggle[autodam] preferences on
 #nop --
 #nop Vars
 #nop --
+
+#list no_lag_fails create neural
 
 #var dam_type {hit|hits|slash|slashes|pound|pounds|whip|whips|sting|stings|bludgeon|bludgeons|claw|claws|pierce|pierces|blast|blasts|stab|stabs|hack and slash|hack and slashes|maul|mauls}
 
@@ -73,7 +76,7 @@ init toggle[autodam] preferences on
 #nop no target
 #action {You can't kill what isn't here.$} {
 	event_raise no_target kill
-}
+} {4}
 
 #action {A light flashes on: //ERROR: NO TARGET\\} {
 	diaLog combat no target;
@@ -106,6 +109,10 @@ init toggle[autodam] preferences on
 	event_raise join
 }
 
+#action {^But nobody is fighting {him|her|it}!$} {
+	event_raise fail_assist
+}
+
 #nop -- combat lines
 #action {%1 assists you!$} {
 	event_raise eval_combat {none} {you}
@@ -124,6 +131,18 @@ init toggle[autodam] preferences on
 #action {^%1 {miss|misses} %3 with {$hit_pron} {$dam_type}.$} {
 	event_raise eval_combat {%1} {%3};
 }
+
+#action {^%1 tries to hit you but you easily avoid the blow.} {
+	#if {"%1" == "$_dead_mob"} {
+		#nop
+	}
+} {4}
+
+#action {^%1 tries to pierce you but fails miserably.$} {
+	#if {"%1" == "$_dead_mob"} {
+		#nop
+	}
+} {4}
 
 #nop barely
 #action {^%1 barely {$hit_type} %3 with {$hit_pron} {$dam_type}.$} {
@@ -228,7 +247,7 @@ init toggle[autodam] preferences on
 
 #alias clear_combat_queue {
 	#nop %0;
-	diaLog lock clearing combat queue;
+	diaLog combat clearing combat queue;
 	#if {&{_queue[combat][]} > 0} {
 		#var _queue[combat] {}
 	}
@@ -241,8 +260,18 @@ init toggle[autodam] preferences on
 
 #alias clear_spellLock {
 	#nop %0;
+	diaLog combat Combat clear spell lock called;
 	#if {"%1" != "kill"} {
 		#var spellLock @mpoch{}
+	}
+}
+
+#alias postcombat_spellLock {
+	#nop %0;
+	#math spellLock_diff spellLock - @mpoch{};
+	#if {$spellLock_diff < 1000} {
+		diaLog combat SpellLock post-kill less than 1000;
+		#math spellLock @mpoch{} + 1000
 	}
 }
 
@@ -253,5 +282,7 @@ init toggle[autodam] preferences on
 #highlight {DESTROY{ |S}} {<188>}
 #highlight {EVISCERATE{ |S}} {<188>}
 #highlight {OBLITERATE{ |S}} {<188>}
+#highlight {DEMOLISH{ |ES}} {<188>}
+#highlight {MASSACRE{ |S}} {<188>}
 
 init_combat_info

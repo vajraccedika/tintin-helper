@@ -129,6 +129,13 @@ load_module nukefire/autoheal
 	sling 'protection from good' %1
 }
 
+#alias cure {
+	#switch {"%1"} {
+		#case {"poison"} {sling 'remove poison' %2};
+		#case {"blind"} {sling 'cure blind' %2}
+	}
+}
+
 #var skill[opener] kill
 
 #class curist close

@@ -127,13 +127,13 @@ event_register {set preferences} {prefs} {set_preference {%2} {%3}}
 }
 
 #alias {^init_pref %1} {
-    #class preferences assign _pref_handler[%1]
+    #class preferences assign #list _pref_handler add %1
 }
 
 #alias set_preference {
     #if {$_pref_handler[%1]} {
         #class preferences assign #var %1 %2;
-        #var _pref_set_request 0
+        pref_handled
     } {
         warn No preference handler for %1.
     }

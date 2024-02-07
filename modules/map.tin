@@ -43,12 +43,14 @@
 #nop -- Variables
 #nop -- ---------------------------------------------------------------
 
+#var mapfile $db/nukefire/msdp.map
+
 #map create 100000;
 #map flag nofollow;
 #map flag vtmap on;
 #map flag static;
 #map flag blockgraphics on;
-#map read $db/msdp.map
+#map read $mapfile
 
 #map terrain {Forest} {<228>⟑} DENSE WIDE
 #map terrain {Field} {<128>·} DENSE WIDE
@@ -89,8 +91,9 @@
 				{
 					#map set {roomcolor} {<118>} {$MSDP_ROOM_EXITS[$EXIT]}
 				}
-			}
-		} {
+			};
+		};
+		#else {
 			#nop -- Room exit doesn't exist, delete;
 			#map get {roomexits} {EXIT_LIST};
 			#if {&EXIT_LIST[$EXIT] != 0} {
@@ -99,7 +102,7 @@
 		}
 
 	};
-
+	#map write $mapfile
 }
 
 #nop -- ---------------------------------------------------------------

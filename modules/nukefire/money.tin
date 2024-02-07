@@ -44,6 +44,7 @@ event_register creditsChange calc_creds {credits_change_calc %2 %3}
 event_register {variable MSDP_MONEY} calc_total_creds {calc_total_creds}
 event_register {variable MSDP_MONEY} set_cash {set_cash %2}
 event_register {variable MSDP_MONEY} money_info {generate_money_info}
+#nop event_register {variable MSDP_MONEY} debug_money {debug_money}
 
 #nop --
 #nop Actions
@@ -104,6 +105,13 @@ event_register {variable MSDP_MONEY} money_info {generate_money_info}
 	event_raise creditsChange loss %1
 }
 
+#alias debug_money {
+	#nop %0;
+	uinfo data MSDP MONEY old: `$msdp_money_old`;
+	uinfo data MSDP MONEY new: `$MSDP_MONEY`;
+	#var msdp_money_old $MSDP_MONEY
+}
+
 #alias depall {
 	deposit $MSDP_MONEY
 }
@@ -130,6 +138,14 @@ event_register {variable MSDP_MONEY} money_info {generate_money_info}
 	set_left_info 3 <B5f819d> money_info 2;
 	#nop set_left_tile 5 <B5f819d> money_info 2 tile;
 	generate_money_info
+}
+
+#alias pay {
+	#format payee {%l} {%1};
+	#format _payname {%l} {$MSDP_CHARACTER_NAME};
+	#if {"$payee" != "$_payname"} {
+		give $MSDP_MONEY credits $payee
+	}
 }
 
 init_money_info

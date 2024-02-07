@@ -56,7 +56,7 @@ event_register enter_world retrieve {bump_retrieve}
         #3 {get all $MSDP_CHARACTER_NAME;wear all};
         n;
         w;
-        drop $MSDP_CHARACTER_NAME;
+        drop corpse;
         #var do_retrieve 0
     }
 }

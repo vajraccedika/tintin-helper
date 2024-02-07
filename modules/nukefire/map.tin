@@ -61,7 +61,8 @@ event_register peace_room map {add_peaceroom %2}
 
 #nop {\e[0m1352\e[0mH \e[0;33m900\e[0mM \e[0;32m838\e[0mV > \e[0;36mThe Temple Ruins\e[0m}
 
-#action {~> \e[0;36m%1 - \e[0;36m[%2] [%3]\e[0m\e[0m} {
+#nop commented out, we have GA now so we don't have this situation
+#nop #action {~> \e[0;36m%1 - \e[0;36m[%2] [%3]\e[0m\e[0m} {
 	event_raise roomLook {%1} {%2} {%3};
 	diaLog map Looking at room
 } {4}
@@ -95,7 +96,7 @@ event_register peace_room map {add_peaceroom %2}
 	#var update_exits 1
 }
 
-#action {{North|East|South|West|Up|Down}%s- %2} {
+#action {^{North|East|South|West|Up|Down}%s- %2} {
 	#if {$update_exits==1} {
 		#var room[exits][%1] %2;
 		diaLog map setting exit %1 to %2;
@@ -164,7 +165,7 @@ event_register peace_room map {add_peaceroom %2}
 	#nop
 }
 
-#action {^%1 {slide|slides} in on a Santa Cruz VX Delfino Ego, shredding it!$} {
+#action {^%1 {slide|slides} in on %2, shredding it!$} {
 	#nop
 }
 
@@ -248,7 +249,6 @@ event_register peace_room map {add_peaceroom %2}
 
 #alias verify_room {
 	#nop %0;
-	exits;
 	look
 }
 

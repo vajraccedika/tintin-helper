@@ -38,9 +38,9 @@ event_register enter_world nukefire {post_connect_load login}
 #alias connect {
 	#showme attempt to create session for player %1.;
 	#switch {"%2"} {
-		#case {"tp"} {#session nukefire:%1 {tdome.nukefire.net} {4001} {$players/%1_nukefire.player}};
+		#case {"tp"} {#session nukefire:%1 {tdome.nukefire.org} {4001} {$players/%1_nukefire.player}};
 		#default {
-		#session nukefire:%1 {tdome.nukefire.net} {4000} {$players/%1_nukefire.player};
+		#session nukefire:%1 {tdome.nukefire.org} {4000} {$players/%1_nukefire.player};
 		}
 	};
 	#var menu_option login;
@@ -85,6 +85,26 @@ event_register enter_world nukefire {post_connect_load login}
 #action {^            What's your name, freejack?} {
 	#line oneshot #tick {name} {#send ${char_name}} {0.5};
 	#class player read {$players/${char_name}_nukefire.player}
+}
+
+#action {^      |  What's your name, freejack?} {
+	#line oneshot #tick {name} {#send ${char_name}} {0.5};
+	#class player read {$players/${char_name}_nukefire.player}
+}
+
+#action {^           What's your name, freejack?} {
+	#line oneshot #tick {name} {#send ${char_name}} {0.5};
+	#class player read {$players/${char_name}_nukefire.player}
+}
+
+#action {^                         What's your name, freejack?} {
+	#line oneshot #tick {name} {#send ${char_name}} {0.5};
+	#class player read {$players/${char_name}_nukefire.player}
+}
+
+#action {^                         What's your name, freejack?$} {
+	#line oneshot #tick {name} {#send ${char_name}} {0.5};
+	#class player read {$players/${char_name}_nukefire.player}	
 }
 
 #action {^Name:} {
@@ -743,14 +763,30 @@ event_register {variable MSDP_GROUP} {right} {#delay {group_info} {generate_grou
 }
 
 #event {SEND OUTPUT} {
-	#if {"$auto[send]"=="on"} {
+	#if {"$toggle[send]"=="on"} {
 		#echo {<cfa>%0}
 	}
 }
 
-#var auto[send] on
+init toggle[send] preferences off
 #config log plain
 #config speedwalk on
+
+#action {^You try, but you can't, youre STUCK...$} {
+	event_raise webbed on
+}
+
+#action {^You're webbed, you can't hit!$} {
+	event_raise webbed on
+}
+
+#action {^You are stuck in a web! You can't move.$} {
+	event_raise webbed on
+}
+
+#action {^The web around you dissolves, and you can move again.$} {
+	event_raise webbed off
+}
 
 #action {^%1 has arrived.$} {event_raise {entity_arrival} {%1}}
 #action {> %1 has arrived.$} {event_raise {entity_arrival} {%1}}

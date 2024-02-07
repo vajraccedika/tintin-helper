@@ -64,7 +64,7 @@
 }
 
 #var articles {the |^a |The |the |of |A |^an | it| in}
-#var item_flags {\(i\)|\(h\)|\(g\)|\(m\)|\(anti-good\)|\(glows\)|\(hums\)|\(good\)|\(invis\)|\(anti-evil\)|\(dark\)|\[socketed\]|\(magic\)|\(insured\)}
+#var item_flags {\(b\)|\(i\)|\(h\)|\(g\)|\(m\)|\(anti-good\)|\(glows\)|\(hums\)|\(good\)|\(invis\)|\(anti-evil\)|\(dark\)|\[socketed\]|\(magic\)|\(insured\)}
 
 #function getKeyword {
 	#local _tmpkey %2;
@@ -76,6 +76,8 @@
 	#replace _raw_item {'s} {};
 	#replace _raw_item {'} { };
 	#replace _raw_item {-} { };
+	#replace _raw_item {]} {};
+	#replace _raw_item {[} {};
 	#replace _raw_item {{$articles}} {};
 	#format _raw_item {%p} {$_raw_item};
 	#list _item_keys create $_raw_item;

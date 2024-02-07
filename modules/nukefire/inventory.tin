@@ -50,9 +50,22 @@ event_register roomLook clear_contents {clear_contents}
 }
 
 #action {You get %1 from %2.$} {
+	diaLog scav get %1 from %2;
 	event_raise get_item {%1} {%2};
 	#nop track-item get %1 from %2
 } {4}
+
+#action {^%1 gets %2.$} {
+	#nop third person get
+}
+
+#Action {^%1 drops %2.$} {
+	#nop third person drop
+}
+
+#action {^%1 puts %2 in %3.$} {
+	#nop third person put
+}
 
 #action {^You drop %1.$} {
 	event_raise drop_item {%1};
@@ -86,7 +99,11 @@ event_register roomLook clear_contents {clear_contents}
 	event_raise item_not_found {%1} {%2}
 }
 
-#action {{A|An|Several}{| load| small packet of| large packet of| few| packet of| large packet of |pile of| large pile of| heap of| large heap of| mountain of| mound of| enormous mound of| enormous mountain of} credits is lying here.$} {
+#action {{A|An|Several}{| load| small packet of| large packet of| few| packet of| large packet of| pile of| large pile of| heap of| large heap of| mountain of| mound of| enormous mound of| enormous mountain of} credits is lying here.$} {
+	#line oneshot #ticker {scav_credits} {g all.credits} {0.1}
+}
+
+#action {One miserable credit is lying here.$} {
 	#line oneshot #ticker {scav_credits} {g all.credits} {0.1}
 }
 

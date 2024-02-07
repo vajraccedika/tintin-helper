@@ -150,7 +150,7 @@ set_right_tile 2 <B85678f> group_info[%*] 10 tile
 	#info sessions save;
 	#list valid_sessions clear;
 	#foreach {*info[SESSIONS][%*]} {_ses} {
-		#if {"$info[SESSIONS][$_ses][IP]" == "3.21.246.34"} {
+		#if {"$info[SESSIONS][$_ses][IP]" == "144.126.216.139"} {
 			#list valid_sessions add $_ses
 		}
 	};

@@ -31,7 +31,7 @@
 }
 
 #action {^[%1] %w %3$} {
-    #if {$cap_who == 1} {
+    #if {$cap_who == 1 && "%2" != "The"} {
         register_player %2
     }
 } {9}

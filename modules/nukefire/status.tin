@@ -40,8 +40,8 @@ event_register {variable MSDP_CLASS} status generate_character_info
 #nop --
 
 #action {< %1H %2M %3V%4>} {
-	diaLog info Prompt
-}
+	diaLog info Prompt: %0
+} {7}
 
 #alias update_hmv {
 	#nop %0;
