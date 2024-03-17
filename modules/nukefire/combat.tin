@@ -52,10 +52,10 @@ init toggle[autodam] preferences on
 
 #list no_lag_fails create neural
 
-#var dam_type {hit|hits|slash|slashes|pound|pounds|whip|whips|sting|stings|bludgeon|bludgeons|claw|claws|pierce|pierces|blast|blasts|stab|stabs|hack and slash|hack and slashes|maul|mauls}
+#var dam_type {crush and twist|crushes and twists|hit|hits|slash|slashes|pound|pounds|whip|whips|sting|stings|bludgeon|bludgeons|claw|claws|pierce|pierces|blast|blasts|stab|stabs|hack and slash|hack and slashes|maul|mauls}
 
 #nop these have pattern a - b - with his/her/its adj dam_type
-#var hit_type {OBLITERATE|OBLITERATES|EVISCERATE|EVISCERATES|DESTROY| DESTROYS|MUTILATE|MUTILATES|DECIMATE|DECIMATES|MASSACRE|MASSACRES|ROCKS THE HELL OUT OF|WRECKS AND RUINS}
+#var hit_type {OBLITERATE|OBLITERATES|EVISCERATE|EVISCERATES|DESTROY|DESTROYS|MUTILATE|MUTILATES|DECIMATE|DECIMATES|MASSACRE|MASSACRES|ROCKS THE HELL OUT OF|WRECKS AND RUINS}
 #var hit_adj {deadly|incredibly powerful|ultimate|powerful|demoralizing|unrelenting}
 #var low_hit_types {barely|graze|grazes}
 #var mid_hit_types {hard|very hard|extremely hard}
@@ -87,6 +87,14 @@ init toggle[autodam] preferences on
 	event_raise no_target disembowel
 }
 
+#Action {^Set up a tripwire for whom?$} {
+	event_raise no_target tripwire
+}
+
+#action {^There are no valid targets to perform a chainsaw dervish on.$} {
+	event_raise no_target chainsaw
+}
+
 #action {You require a target for Neural Overload.$} {
 	event_raise no_target neural
 }
@@ -97,7 +105,7 @@ init toggle[autodam] preferences on
 
 #nop -- failed skill, changes delay
 #action {You failed to initiate Neural Overload, and your systems destabilize.$} {
-	event_raise skill_fail neural
+	#nop event_raise skill_fail neural
 }
 
 #nop flee
@@ -179,6 +187,14 @@ init toggle[autodam] preferences on
 
 #action {^%1 tries to pierce the air instead of fighting %2.$} {
 	event_raise eval_combat {%1} {%2}
+}
+
+#action {^Your attempt to set up a tripwire for %1 fails!$} {
+	event_raise eval_combat you {%1}
+}
+
+#action {^You have been blinded!$} {
+	even_raise blind on
 }
 
 #nop --

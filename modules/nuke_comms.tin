@@ -25,7 +25,8 @@
 #nop --
 #nop Initialize some port stuff
 #nop --
-init comms-session comms;
+#format _cs {comms%s} ${char_name}
+init comms-session $_cs;
 
 #info sessions save;
 #if {!&info[SESSIONS][${comms-session}]} {
@@ -43,6 +44,12 @@ init comms-session comms;
 #alias nuke_comms-unregister {
 	event_remove_handler nuke_comms;
 }
+
+#list comms_filter create 
+{I'll kill you with my teacup!}
+{I bow to NO man!}
+{It's an Animal thing!}
+{I will take a piece of him.!}
 
 #var chat[rows] 10;
 
@@ -74,11 +81,15 @@ init comms-session comms;
 #nop -- ---------------------------------------------------------------
 
 #action {You say, '%1'$} {
-	event_raise {commsSay} {You} {%1} {%0};
+	#if {@is{%1;comms_filter} == 0} {
+		event_raise {commsSay} {%1} {%3} {%0};
+	}
 } {8}
 
-#action {%1 {says|grunts}, '%1'$} {
-	event_raise {commsSay} {%1} {%3} {%0};
+#action {%1 says, '%2'$} {
+	#if {@is{%2;comms_filter} == 0} {
+		event_raise {commsSay} {%1} {%2} {%0};
+	}
 } {8}
 
 #action {%1 gossips, '{.*}'$} {

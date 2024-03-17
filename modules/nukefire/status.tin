@@ -32,6 +32,7 @@ event_register prompt draw_hmv_bars draw_hmv_bars
 event_register {variable MSDP_LEVEL} status generate_character_info
 event_register {variable MSDP_EXPERIENCE} status generate_character_info
 event_register {variable MSDP_CLASS} status generate_character_info
+event_register blindness set_blind {set_blind %2}
 
 #var prompt_regexp {^< [0-9]+H [0-9]+M [0-9]+V\s?(\(news\))?\s?(\(motd\))?\s?(\(\d+\))?\s?>}
 
@@ -42,6 +43,26 @@ event_register {variable MSDP_CLASS} status generate_character_info
 #action {< %1H %2M %3V%4>} {
 	diaLog info Prompt: %0
 } {7}
+
+#action {^You see nothing but infinite darkness...$} {
+	event_raise blinded on
+}
+
+#action {^You can't see a damned thing, you're blind!$} {
+	event_raise blindned on
+}
+
+#action {^You feel a cloak of blindness dissolve.$} {
+	event_raise blinded off
+}
+
+#action {^Your vision returns!$} {
+	event_raise blinded off
+}
+
+#alias set_blind {
+	#var blinded %1
+}
 
 #alias update_hmv {
 	#nop %0;

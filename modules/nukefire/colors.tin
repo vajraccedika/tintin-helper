@@ -55,7 +55,9 @@
 
 #nop usage: shade <start color> <end color> <jump> <arg> <text>
 #alias {shade %1 %2 %3 %4 %5} {
+    #echo {SHADE ALIAS START};
     #var start_color @hexToDec{%1};
+    #echo {START_COLOR ASSIGNED};
     #var end_color @hexToDec{%2};
     #var color_step auto;
     #var arg %4;
@@ -63,6 +65,7 @@
     #var vchars $text;
     #replace vchars { } {};
     #var nchars @len{$vchars};
+    #echo {FIRST IF IN SHADE};
     #if {@isD{%3}} {
         #var color_step %3
     };
@@ -80,16 +83,16 @@
     #if {$chars_per_color < 1} {
         #var chars_per_color 1
     };
+    #nop bad if is in this block;
     #if {{$arg} == {loop}} {
         #math midpoint {@len{$text}/2};
-        #nop #math {chars_per_color} $chars_per_color /2;
-        #nop #if {$chars_per_color < 1} {#var chars_per_color 1};
         #if {@isOdd{$nchars}} {
             #math midpoint $midpoint + 1
         };
         #math chars_per_color ($nchars - $midpoint) / $n_colors;
         #math lower_start $nchars % $n_colors;
-        #if {@isOdd{$nchars} } {
+        #if {@isOdd{$nchars}} {
+            #nop
         };
         #foreach {*text_list[%*]} {_char} {
             #var tmp_char $text_list[$_char];
@@ -161,6 +164,7 @@
 }
 
 #function decToHex {
+    #echo {decToHex called};
     #var answer {};
     #var _val %1;
     #var _base 6;
