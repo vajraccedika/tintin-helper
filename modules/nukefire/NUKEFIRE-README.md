@@ -17,7 +17,7 @@ Your player file should look something like this:
 
 #var char_name {<name>}
 #var char_password {<password>}
-#var layout_preference {full}
+#var layout_preference {full_nuke}
 #var comms-session {com}
 #var cont_key <keyword for a container>
 

@@ -25,12 +25,12 @@
 #nop Events
 #nop --
 
-event_register {variable MSDP_OPPONENT_NAME} position {opponent_eval {%2} {%3}}
-event_register updatePosition position {update_position %2}
+#nop event_register {variable MSDP_OPPONENT_NAME} position {opponent_eval {%2} {%3}}
+event_register updatePosition position {update_position {%2} {%1}}
 event_register {variable position} position {update_msdp_pos %2}
-event_register mob_kill position {update_position standing}
-event_register {variable MSDP_OPPONENT_HEALTH} opp_eval {opponent_eval {%2} {%3}}
-event_register join position {update_position fighting}
+event_register mob_kill position {diaLog events mob_kill event triggered;update_position standing}
+#nop event_register {variable MSDP_OPPONENT_HEALTH} opp_eval {opponent_eval {%2} {%3}}
+event_register join position {update_position fighting join}
 event_register player_death position {update_position dead}
 event_register eval_combat position {combat_position {%2} {%3}}
 event_register flee position {update_position standing}
@@ -124,12 +124,14 @@ event_register fail_assist position {update_position standing}
 		event_raise updatePosition standing
 	};
 	#else {
-		event_raise updatePosition fighting
+		event_raise updatePosition fighting;
+		diaLog events opponent_eval setting pos to fighting
 	}
 }
 
 #alias update_position {
 	#nop %0;
+	diaLog events Event update_position called and set to %1 by %2;
 	#var position[current] %1;
 	diaLog kill Position="$MSDP_POSITION"
 }
@@ -141,10 +143,11 @@ event_register fail_assist position {update_position standing}
 
 #alias combat_position {
 	#nop %0;
-	#format atkr {%l}  %1;
-	#format victim {%l} %2;
+	#format atkr {%l}  {%1};
+	#format victim {%l} {%2};
 	#if {"$atkr" == "you" || "$victim" == "you" || "$atkr" == "your"} {
-		update_position fighting
+		update_position fighting combat_position;
+		diaLog events Calling update position with atk="$atkr" and vict="$victim"
 	}
 }
 

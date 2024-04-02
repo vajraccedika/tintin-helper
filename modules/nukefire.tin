@@ -207,6 +207,16 @@ event_register {variable MSDP_GROUP} {right} {#delay {group_info} {generate_grou
 	}
 }
 
+#action {^The air itself seems to mourn as %1 succumbs to fate, a tragic tableau of demise.$} {
+	#buffer get _expline -1;
+	#format  _dead_mob {%n} {%1};
+	#regexp {$_expline} {You receive %d experience points.} {
+		event_raise {mob_{( a share of)?}kill} {$_dead_mob} {&1}
+	} {
+		event_raise {mob_kill} {$_dead_mob} {$_kill_xp}
+	}
+}
+
 #action {^%1's pitiful death cry assaults your ears, sending shivers down your spine!$} {
 	#buffer get _expline -1;
 	#format  _dead_mob {%n} {%1};

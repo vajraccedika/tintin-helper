@@ -277,6 +277,7 @@ Combat queues clear at the end of combat automatically.\n
         #case {"firemin"} #var _delay 3500;
         #case {"hstomp"} #var _delay 4000;
         #case {"chainsaw"} #var _delay 3000;
+        #case {"devour"} #var _delay 100;
         #default {
             #var _delay 2000;
             info spell Unknown delay for %1, using $_delay ms
