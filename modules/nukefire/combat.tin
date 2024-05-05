@@ -103,6 +103,14 @@ init toggle[autodam] preferences on
 	event_raise no_target whirlwhind
 }
 
+#action {^You'd only obliterate the landscape, no enemies are in range!$} {
+	event_raise no_target radstorm
+}
+
+#action {^Whom do you want to roundhouse kick?$} {
+	event_raise no_target roundhouse
+}
+
 #nop -- failed skill, changes delay
 #action {You failed to initiate Neural Overload, and your systems destabilize.$} {
 	#nop event_raise skill_fail neural
@@ -167,6 +175,7 @@ init toggle[autodam] preferences on
 	event_raise eval_combat {%1} {%3}
 }
 
+
 #nop RIP
 #action {^%1 {RIP|RIPS} %3 to small fragments with {$hit_pron} {$dam_type}.$} {
 	event_raise eval_combat {%1} {%3};
@@ -194,7 +203,7 @@ init toggle[autodam] preferences on
 }
 
 #action {^You have been blinded!$} {
-	even_raise blind on
+	event_raise blinded on
 }
 
 #nop --

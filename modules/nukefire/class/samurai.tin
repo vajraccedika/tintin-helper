@@ -1,0 +1,57 @@
+#class samurai kill
+#class samurai open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/class/samurai-description {Samurai class utilities}
+#var nukefire/class/samurai-help {
+	Aliases and skill definitions for Samurai.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/class/samurai-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/class/samurai
+	} {
+		fail_module nukefire/class/samurai unknown reason
+	}
+}
+
+#nop --
+#nop Toggles
+#nop --
+
+#nop --
+#nop Events
+#nop --
+
+#nop --
+#nop -- Action
+#nop --
+
+
+#nop --
+#nop Vars
+#nop --
+
+#var skill[opener] kill
+#var skill[combat] roundhouse
+
+#var skill[15] roundhouse
+#var skill[22] flurry
+
+#nop --
+#nop Alias
+#nop --
+
+load_module nukefire/pick
+
+#alias bs backstab
+
+
+#class samurai close

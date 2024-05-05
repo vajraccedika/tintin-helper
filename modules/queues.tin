@@ -223,7 +223,7 @@ Combat queues clear at the end of combat automatically.\n
 #nop -- Spell delays are in 1000ths of a second;
 #func spellDelay {
     #switch {"%1"} {
-        #case {"heal"} #var _delay 2000;
+        #case {"heal"} #var _delay 2200;
         #case {"convert"} #var _delay 12000;
         #case {"shapechange"} #var _delay 4000;
         #case {"fst"} #var _delay 3000;
@@ -237,20 +237,20 @@ Combat queues clear at the end of combat automatically.\n
         #case {"harvest"} #var _delay 0;
         #case {"extract"} #var _delay 3000;
         #case {"hellstream"} #var _delay 1000;
-        #case {"selfrepair"} #var _delay 3000;
-        #case {"invig"} #var _delay 3000;
+        #case {"selfrepair"} #var _delay 3500;
+        #case {"invig"} #var _delay 2200;
         #case {"kill"} #var _delay 1000;
         #case {"hit"} #var _delay 500;
         #case {"ambush"} #var _delay 0;
         #case {"circle"} #var _delay 8000;
         #case {"backstab"} #var _delay 3500;
-        #case {"rejuv"} #var _delay 2000;
-        #case {"disembowel"} #var _delay 5000;
-        #case {"pound"} #var _delay 4500;
-        #case {"neural"} #var _delay 6000;
-        #case {"grapple"} #var _delay 6000;
-        #case {"rogue"} #var _delay 6000;
-        #case {"dagger"} #var _delay 9000;
+        #case {"rejuv"} #var _delay 2200;
+        #case {"disembowel"} #var _delay 5200;
+        #case {"pound"} #var _delay 4700;
+        #case {"neural"} #var _delay 6200;
+        #case {"grapple"} #var _delay 6200;
+        #case {"rogue"} #var _delay 6200;
+        #case {"dagger"} #var _delay 9200;
         #case {"join"} #var _delay 1000;
         #case {"look"} #var _delay 1000;
         #case {"pick"} #var _delay 1000;
@@ -259,10 +259,10 @@ Combat queues clear at the end of combat automatically.\n
         #case {"recite"} #var _delay 500;
         #case {"gg"} #var _delay 500;
         #case {"request_recall"} #var _delay 500;
-        #case {"bs"} #var _delay 2000;
+        #case {"bs"} #var _delay 2200;
         #case {"ka"} #var _delay 1000;
         #case {"overboost"} #var _delay 3000;
-        #case {"flurry"} #var _delay 4000;
+        #case {"flurry"} #var _delay 4200;
         #case {"rend"} #var _delay 3000;
         #case {"psiattack"} #var _delay 6000;
         #case {"psiblast"} #var _delay 6000;
@@ -275,9 +275,10 @@ Combat queues clear at the end of combat automatically.\n
         #case {"hd"} #var _delay 5000;
         #case {"suplex"} #var _delay 5000;
         #case {"firemin"} #var _delay 3500;
-        #case {"hstomp"} #var _delay 4000;
-        #case {"chainsaw"} #var _delay 3000;
+        #case {"hstomp"} #var _delay 4200;
+        #case {"chainsaw"} #var _delay 3200;
         #case {"devour"} #var _delay 100;
+        #case {"gslam"} #var _delay 4200;
         #default {
             #var _delay 2000;
             info spell Unknown delay for %1, using $_delay ms

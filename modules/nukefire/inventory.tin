@@ -22,7 +22,7 @@
 	}
 }
 
-event_register roomContents update_contents {update_contents %2 {%3}}
+event_register roomContents update_room_contents {update_room_contents %2 {%3}}
 event_register roomLook clear_contents {clear_contents}
 
 #action {~^\e[0;32m({(\s?\d+)}) \e[0;32m%3$} {
@@ -111,7 +111,7 @@ event_register roomLook clear_contents {clear_contents}
 #nop Alias
 #nop --
 
-#alias update_contents {
+#alias update_room_contents {
 	#nop %0;
 	#format _n_items %p %1;
 	#var _tmp_item %2;
