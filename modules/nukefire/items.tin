@@ -1,0 +1,434 @@
+#class items kill
+#class items open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/items-description {Items management for Nukefire}
+#var nukefire/items-help {
+	Tracks items and their types for selling
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/items-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/items
+	} {
+		fail_module nukefire/items unknown reason
+	}
+}
+
+#nop --
+#nop Vars
+#nop --
+
+#var buyer_types {
+	{Hoby} {armor};
+	{Frankk} {worn};
+	{Auto} {magic};
+	{Igor} {weapon};
+	{the jewelsmith} {treasure};
+	{Rigel} {implant};
+	{Pistol Pete} {gun};
+	{Fred} {light};
+	{ZR Nine} {battery};
+	{Abdul the trader} {special};
+	{Vespag the Weaponsmith} {weapon};
+	{Loesch the Trader} {worn};
+	{Guertot the Armorer} {armor};
+	{Anjaho the Witch} {magic}
+}
+
+#var register_item 1
+
+#var item_regexp {({(\s?\d+)})} 
+
+#list loot_types create armor worn magic weapon treasure implant gun light battery special
+
+#nop --
+#nop Events
+#nop --
+
+event_register sold_item items {register_item {%2} {%3}}
+event_register drop_item items {check_trash {%2}}
+event_register container_contents items {set_content_cap {%2}}
+event_register cap_line items {add_contents {%2} %3}
+
+event_register prompt clear_content {clear_content_cap}
+event_register prompt items {clear_drop}
+
+event_register inv_full items {inv_full {%2}}
+
+event_register get_item drop_trash {drop_trash {%2}}
+event_register get_item pack_loot {pack_loot {%2}}
+event_register get_item remove_contents {update_contents get {%2} {%3}}
+event_register get_item sell_item {sell_one_item {%2} {%3}}
+
+event_register mob_kill items {tog_pack_loot}
+
+event_register put_item add_contents {update_contents put {%2} {%3}}
+
+event_register item_not_found items {get_one_item}
+
+event_register receive_item receive_pack {pack_loot {%3}}
+event_register receive_item receive_drop {drop_trash {%3}}
+
+event_register receive_item add_inventory {update_contents put {%3} inventory}
+
+event_register give_item remove_inventory {update_contents give {%2} inventory}
+
+
+#nop --
+#nop Actions
+#nop --
+
+#action {%1 now has %2.$} {
+	event_raise sold_item {%1} {%2}
+}
+
+#action {You are carrying:$} {
+	event_raise container_contents inventory
+}
+
+#action {^%w (carried):} {
+	event_raise container_contents %1
+}
+
+#action {^%w (used):} {
+	diaLog scav Worn container;
+	event_raise container_contents %1
+}
+
+#nop --
+#nop Alias
+#nop --
+
+#alias register_item {
+	#nop %0;
+	#if {$register_item == 1} {
+		diaLog scav Registering item: "%2";
+		diaLog scav Buyer is: "%1";
+		#var _item {%2};
+		#var _buyer {%1};
+		#if {&{buyer_types[$_buyer]}} {
+			#if {"@want_sell{$_item}" == "0"} {
+				#var _itype $buyer_types[$_buyer];
+				#class itemsdb assign {#list ${_itype}_items add {{$_item}} };
+				#nop below will only check first trash list, update;
+				#if {@is{trash_items;$_item}} {
+					#list trash_items delete @is{trash_items;$_item} 
+				};
+				save_items
+			}
+		}
+	}
+}
+
+#alias clear_drop {
+	#nop %0;
+	#if {$drop_cap == 1} {
+		#var drop_cap 0
+	}
+}
+
+#tab trash
+#alias trash {
+	#var _kw %1;
+	#var drop_cap 1;
+	drop $_kw
+}
+
+#nop syntax to get length of a list whose name is stored in another var:
+#nop &{${amb}[]} where val of amb is name of list
+#alias check_trash {
+	#nop %0;
+	#var _item %1;
+	#if {$drop_cap == 1} {
+		#if {@is_trash{$_item} == 0} {
+			#var _trash_list $trash_idx[-1];
+			#if { &{${_trash_list}[]} < 299 } {
+				#class itemsdb assign #list ${_trash_list} add {%1}
+			};
+			#else {
+				#math _new_trash_idx &{trash_idx[]} + 1;
+				#format _new_trash_list {trash_items_%d} {$_new_trash_idx};
+				#class itemsdb assign #list trash_idx add $_new_trash_list;
+				#class itemsdb assign #list ${_new_trash_list} add {%1}
+			};
+			save_items
+		};
+		#var drop_cap 0
+	}
+}
+
+#alias drop_trash {
+	diaLog scav Drop trash="%1";
+	#nop %0;
+	#if {@is_trash{%1}} {
+		drop @getKeyword{%1}
+	}
+}
+
+#alias pack_loot {
+	#nop %0;
+	#if {"$toggle[pack_loot]" == "on"} {
+		#if {"@want_sell{%1}" != "0"} {
+			put @getKeyword{%1} $container[loot][key]
+		}
+	}
+}
+
+#alias set_content_cap {
+	#nop %0;
+	diaLog scav Capturing contents, handler=%1;
+	#var content_cap 1;
+	#var _container %1;
+	diaLog scav container="$_container", received="%1";
+	#list contents[$_container] clear
+}
+
+#alias clear_content_cap {
+	#nop %0;
+	#if {$content_cap == 1} {
+		diaLog scav Ending contents capture;
+		#var content_cap 0
+	}
+}
+
+#alias add_put {
+	#nop %0;
+	#local _cont %1;
+	#local _item %2;
+	#
+}
+
+#alias add_contents {
+	#nop %0;
+	#if {$content_cap == 1} {
+		#unvar _item_cnt;
+		#var _it %1;
+		#regexp {$_it} {({(\s?\d+)}) {.*}}  {
+			#format _item_cnt {%p} {&1};
+			#var _it {&3};
+			diaLog scav _it=$_it;
+			diaLog scav cnt=$_item_cnt;
+		} {#nop};
+		#if {&{_item_cnt}} {
+			#loop {1} {$_item_cnt} {_ic} {
+				#list contents[$_container] add @cleanItem{{$_it}}
+			}
+		};
+		#else {
+			#list contents[$_container] add @cleanItem{{$_it}}
+		}
+	}
+}
+
+#alias unregister_last {
+	#list %1 delete -1
+}
+
+#alias save_items {
+	#class itemsdb write $db/items.db
+}
+
+#alias {get_loot %1} {
+	#local {_key} {$container[loot][key]};
+	#local {_cont} {$container[loot][name]};
+	diaLog scav key=$_key;
+	#if {@is{%1;loot_types}} {
+		#var get_loot %1;
+		toggle pack_loot off;
+	};
+	look in $_key;
+	#foreach {$contents[$_key]} {_ck} {
+		#if {"@want_sell{$_ck}" == "$get_loot"}  {
+			diaLog scav getloot="@getKeyword{$_ck}";
+			get @getKeyword{$_ck} ${_key}
+		}
+	}
+}
+
+#alias {sell_loot %1} {
+	#var sell_type %1;
+	#var do_sell 1;
+	toggle pack_loot off;
+	look in $container[loot][key];
+	#line oneshot #ticker {get_one_item} {get_one_item $sell_type} {1}
+}
+
+#alias get_one_item {
+	#nop %0;
+	#if {$do_sell == 1} {
+		#unvar next_item;
+		#foreach {$contents[$container[loot][key]]} {_one} {
+			#if {"@want_sell{$_one}" == "$sell_type"} {
+				#var next_item $_one;
+				diaLog scav next item="$_one";
+				#break
+			}
+		};
+		#if {&{next_item}} {
+			get @getKeyword{$next_item} $container[loot][key];
+			diaLog scav attempt get="$next_item";
+			#var attempt_item $next_item
+		};
+		#else {
+			#if {$do_sell == 1} {
+				uinfo tools No more items of type `$sell_type` in `$container[loot][name]`.;
+				#var do_sell 0;
+				#unvar sell_type;
+			}
+		}
+	}
+}
+
+#alias sell_one_item {
+	#nop %0;
+	#if {$do_sell == 1} {
+		#local _sell_itm %1;
+		#local _sell_cnt %2;
+		diaLog scav sell item="$_sell_itm";
+		diaLog scav next item="$next_item";
+		#if {"$_sell_cnt" == "$container[loot][name]"} {
+			#if {"@want_sell{$_sell_itm}" == "$sell_type"} {
+				sell @getKeyword{$_sell_itm};
+				queueAdd nco get_one_item
+			};
+			#else {
+				queueAdd nco get_one_item
+			}
+		};
+		#elseif {"$_sell_itm" != "$next_item"} {
+			queueAdd nco get_one_item
+		}
+	}
+}
+
+#alias give_loot {
+	#var looter %1;
+	#foreach {$contents[inventory]} {_ck} {
+		#if {"@want_sell{$_ck}" != "0"}  {
+			diaLog scav getloot="@getKeyword{$_ck}";
+			give @getKeyword{$_ck} $looter
+		}
+	}
+}
+
+#alias update_contents {
+	#nop %0;
+	diaLog scav update_contents: op=%1, item="%2", cont="%3";
+	#local _op %1;
+	#local _item {%2};
+	#local _cont {%3};
+	diaLog scav op is"$_op";
+	diaLog scav _item is "$_item";
+	diaLog scav cont is "$_cont";
+	#switch {"$_cont"} {
+		#case {"$container[loot][name]"} {
+			#local _op_cont $container[loot][key]
+		};
+		#case {"$container[main][name]"} {
+			#local _op_cont $container[main][key]
+		};
+		#case {"inventory"} {
+			#local _op_cont inventory
+		}
+	};
+	#if {&{_op_cont}} {
+		#if {"$_op" == "put"} {
+			#local _idx @is{$_item;contents[inventory]};
+			#if {$_idx > 0} {
+				diaLog scav removing item at index=$_idx;
+				#list contents[inventory] delete $_idx;
+			};
+			diaLog scav Adding "$_item" to list $_op_cont;
+			#list contents[${_op_cont}] add $_item
+		};
+		#elseif {"$_op" == "get"} {
+			#local _idx @is{$_item;contents[$_op_cont]};
+			#if {$_idx > 0} {
+				diaLog scav idx > 0;
+				#list contents[${_op_cont}] delete $_idx
+			};
+			#list contents[inventory] add $_item
+		};
+		#elseif {"$_op" == "give"} 	 {
+			#local _idx @is{$_item;contents[$_op_cont]};
+			#if {$_idx > 0} {
+				diaLog scav idx > 0;
+				#list contents[${_op_cont}] delete $_idx
+			};
+		}
+	}
+}
+
+#alias tog_pack_loot {
+	#nop %0;
+	#if {"$toggle[pack_loot]" == "off"} {
+		toggle pack_loot
+	}
+}
+
+#nop --
+#nop Functions
+#nop --
+
+#function want_sell {
+	diaLog scav want sell arg="%1";
+	#var _sell 0;
+	#var _chk_itm %1;
+	#if {@is{$_chk_itm;armor_items}} {
+		#return armor
+	};
+	#elseif {@is{$_chk_itm;weapon_items}} {
+		#return weapon
+	};
+	#elseif {@is{$_chk_itm;treasure_items}} {
+		#return treasure
+	};
+	#elseif {@is{$_chk_itm;worn_items}} {
+		#return worn
+	};
+	#elseif {@is{$_chk_itm;implant_items}} {
+		#return implant
+	};
+	#elseif {@is{$_chk_itm;magic_items}} {
+		#return magic
+	};
+	#elseif {@is{$_chk_itm;light_items}} {
+		#return light
+	};
+	#elseif {@is{$_chk_itm;battery_items}} {
+		#return battery
+	};
+	#elseif {@is{$_chk_itm;special_items}} {
+		#return special
+	};
+	#elseif {@is{$_chk_itm;gun_items}} {
+		#return gun
+	};
+	#else {
+		#return 0
+	}
+}
+
+#function is_trash {
+	#var _trash %1;
+	#foreach {*trash_idx[%*]} {_ti} {
+		#if {@is{$_trash;${trash_idx[$_ti]}}} {
+			#return 1
+		}
+	};
+	#return 0
+}
+
+#read $db/items.db
+
+init toggle[pack_loot] preferences on
+
+#class items close

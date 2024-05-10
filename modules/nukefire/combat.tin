@@ -125,6 +125,10 @@ init toggle[autodam] preferences on
 	event_raise join
 }
 
+#action {^You can't see who to hit!$} {
+	#nop
+}
+
 #action {^But nobody is fighting {him|her|it}!$} {
 	event_raise fail_assist
 }

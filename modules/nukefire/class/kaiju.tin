@@ -1,0 +1,118 @@
+#class kaiju kill
+#class kaiju open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/class/kaiju-description {kaiju class utilities}
+#var nukefire/class/kaiju-help {
+	Aliases and skill definitions for kaiju.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/class/kaiju-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/class/kaiju
+	} {
+		fail_module nukefire/class/kaiju unknown reason
+	}
+}
+
+#nop --
+#nop Toggles
+#nop --
+
+init toggle[grow_shell] preferences off
+init toggle[grow_claws] preferences off
+init toggle[regen] preferences off
+init toggle[grow_body] preferences off
+init toggle[devour] preferences off
+init toggle[grow_arms] preferences off
+
+#nop -- 
+#nop Events
+#nop --
+
+event_register mob_kill kaiju {do_devour {%2}}
+
+#nop --
+#nop Vars
+#nop --
+
+#var last_regen 0
+#var regen_delay 3
+
+#var skill[opener] ka
+
+#nop --
+#nop Alias
+#nop --
+
+
+#alias do_devour {
+    #nop %0;
+    #if {@isPlayer{%1} == 0 && "$toggle[devour]" == "on" && $MSDP_MANA < $MSDP_MANA_MAX } {
+        queueAdd nco {gorge corpse}
+    }
+}
+
+#alias do_regen {
+	#if { ( @epoch{} - $regen_delay ) < $last_regen } {
+		#return 
+	} { 
+		queueAdd heal regen;
+		#var last_regen @epoch{}
+	}
+}
+
+#tab regen_commands
+#alias regen_commands {
+	uinfo heal Use `autoregen h` <`1-99`> to set regen health threshold.;
+	uinfo heal Use `autoregen m` <`1-99`> to set regen mana threshold.;
+	uinfo auto Use toggle regen <`on`/`off`> to turn auto mode is on or off.;
+	regen_report
+}
+
+#alias regen_report {
+	uinfo heal regen health threshold at `$regen_thresh[health]`.;
+	uinfo heal regen mana threshold `$regen_thresh[mana]`.;
+	uinfo heal Use `regen_commands` to display auto selfrep commands.;
+	uinfo heal Auto regen is `$toggle[regen]`.
+}
+
+#tab autoregen
+#alias autoregen {
+	#if {@isD{%2}} {
+		#switch {"%1"} {
+			#case {"h"} {init regen_thresh[health] preferences @clamp{%2;1;99}};
+			#case {"m"} {init regen_thresh[mana] preferences @clamp{%2;1;99}};
+			#default {uinfo heal Please choose a percentage between `1-99`.};
+		};
+		regen_report;
+	};
+	#else {
+		#switch {"%1"} {
+			#case {"on"} {toggle regen on};
+			#case {"off"} {toggle regen off};
+			#default {regen_report}
+		}
+	}
+} {4}
+
+#alias auto_regen {
+	#if {"$toggle[regen]"=="on"} {
+		#if {@pct{$MSDP_HEALTH;$MSDP_HEALTH_MAX}<$regen_thresh[health]} {
+			#if {@pct{$MSDP_MANA;$MSDP_MANA_MAX}>$regen_thresh[mana]} {
+				do_regen
+			}
+		}
+	}
+}
+
+#ticker {aregen} {auto_regen} {0.5}
+
+#class kaiju close

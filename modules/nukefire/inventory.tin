@@ -104,7 +104,7 @@ event_register roomLook clear_contents {clear_contents}
 }
 
 #action {One miserable credit is lying here.$} {
-	#line oneshot #ticker {scav_credits} {g all.credits} {0.1}
+	#line oneshot #ticker {scav_credits} {g all.credit} {0.1}
 }
 
 #nop --

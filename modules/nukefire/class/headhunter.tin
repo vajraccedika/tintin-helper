@@ -1,0 +1,162 @@
+#class headhunter kill
+#class headhunter open
+
+#nop --
+#nop Class Definitions
+#nop --
+
+#var nukefire/class/headhunter-description {headhunter class utilities}
+#var nukefire/class/headhunter-help {
+	Aliases and skill definitions for headhunter.
+}
+
+#nop --
+#nop Modloader Stuff
+#nop --
+
+#alias nukefire/class/headhunter-register {
+	#if {@isloaded{modloader}} {
+		register_module nukefire/class/headhunter
+	} {
+		fail_module nukefire/class/headhunter unknown reason
+	}
+}
+
+#nop --
+#nop Toggles
+#nop --
+
+init toggle[damcon] preferences off
+init toggle[turbo] preferences off
+init toggle[selfrepair] preferences off
+init toggle[overboost] preferences off
+
+#nop --
+#nop Vars
+#nop --
+
+#var last_selfrepair 0
+#var selfrepair_delay 3
+#var last_overboost 0
+#var overboost_delay 3
+
+#var skill[opener] kill
+#var skill[combat] hstomp
+
+#nop --
+#nop Alias
+#nop --
+
+#alias pp pound
+#alias sf selfrepair
+
+#alias do_selfrepair {
+	#if { ( @epoch{} - $selfrepair_delay ) < $last_selfrepair } {
+		#return 
+	} { 
+		queueAdd heal {selfrepair };
+		#var last_selfrepair @epoch{}
+	}
+}
+
+#tab sr_commands
+#alias sr_commands {
+	uinfo heal Use `aself h` <`1-99`> to set selfrep health threshold.;
+	uinfo heal Use `aself v` <`1-99`> to set selfrep move threshold.;
+	uinfo auto Use toggle selfrepair <`on`/`off`> to turn auto mode is on or off.;
+	sr_report
+}
+
+#alias sr_report {
+	uinfo heal Selfrep threshold at `$sr_thresh[health]`.;
+	uinfo heal Selfrep movement threshold `$sr_thresh[move]`.;
+	uinfo heal Use `sr_commands` to display auto selfrep commands.;
+	uinfo heal Auto selfrep is `$toggle[selfrepair]`.
+}
+
+#tab aselfrep
+#alias aselfrep {
+	#if {@isD{%2}} {
+		#switch {"%1"} {
+			#case {"h"} {init sr_thresh[health] preferences @clamp{%2;1;99}};
+			#case {"v"} {init sr_thresh[move] preferences @clamp{%2;1;99}};
+			#default {uinfo heal Please choose a percentage between `1-99`.};
+		};
+		sr_report;
+	};
+	#else {
+		#switch {"%1"} {
+			#case {"on"} {toggle selfrepair on};
+			#case {"off"} {toggle selfrepair off};
+			#default {sr_report}
+		}
+	}
+} {4}
+
+#alias auto_selfrepair {
+	#if {"$toggle[selfrepair]"=="on"} {
+		#if {@pct{$MSDP_HEALTH;$MSDP_HEALTH_MAX}<$sr_thresh[health]} {
+			#if {@pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}>$sr_thresh[move]} {
+				do_selfrepair
+			}
+		}
+	}
+}
+
+#alias do_overboost {
+	#if { ( @epoch{} - $overboost_delay ) < $last_overboost } {
+		#return 
+	} { 
+		queueAdd heal {overboost };
+		#var last_overboost @epoch{}
+	}
+}
+
+#tab ob_commands
+#alias ob_commands {
+	uinfo heal Use `aoverb v` <`1-99`> to set selfrep move threshold.;
+	uinfo heal Use `aoverb m` <`1-99`> to set selfrep mana threshold.;
+	uinfo auto Use toggle overboost <`on`/`off`> to turn auto mode is on or off.;
+	sr_report
+}
+
+#alias ob_report {
+	uinfo heal Overboost move threshold at `$ob_thresh[move]`.;
+	uinfo heal Overboost movement threshold `$ob_thresh[mana]`.;
+	uinfo heal Use `ob_commands` to display auto selfrep commands.;
+	uinfo heal Auto overboost is `$toggle[overboost]`.
+}
+
+#tab aoverb
+#alias aoverb {
+	#if {@isD{%2}} {
+		#switch {"%1"} {
+			#case {"v"} {init ob_thresh[move] preferences @clamp{%2;1;99}};
+			#case {"m"} {init ob_thresh[mana] preferences @clamp{%2;1;99}};
+			#default {uinfo heal Please choose a percentage between `1-99`.};
+		};
+		ob_report;
+	};
+	#else {
+		#switch {"%1"} {
+			#case {"on"} {toggle overboost on};
+			#case {"off"} {toggle overboost off};
+			#default {ob_report}
+		}
+	}
+} {4}
+
+#alias auto_overboost {
+	#if {"$toggle[overboost]"=="on"} {
+		#if {@pct{$MSDP_MOVEMENT;$MSDP_MOVEMENT_MAX}<$ob_thresh[move]} {
+			#if {@pct{$MSDP_MANA;$MSDP_MANA_MAX}>$ob_thresh[mana]} {
+				do_overboost
+			}
+		}
+	}
+}
+
+#ticker {aself} {auto_selfrepair} {0.2}
+#ticker {aover} {auto_overboost} {0.5}
+
+#class headhunter close

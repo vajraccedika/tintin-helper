@@ -279,6 +279,7 @@ Combat queues clear at the end of combat automatically.\n
         #case {"chainsaw"} #var _delay 3200;
         #case {"devour"} #var _delay 100;
         #case {"gslam"} #var _delay 4200;
+        #case {"combat"} #var _delay 4200;
         #default {
             #var _delay 2000;
             info spell Unknown delay for %1, using $_delay ms
